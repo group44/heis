@@ -1,0 +1,7 @@
+package init
+
+import "fmt"
+
+func printBroadcast () {
+	fmt.Println("This package is working as intended.\n")
+}

@@ -1,0 +1,13 @@
+package main
+
+import (
+	"fmt"
+	"initElevator"
+	//"net"
+	//"os"
+)
+
+func main() {
+	fmt.Println("Hello, world!\n")
+	initElevator.PrintBroadcast()
+}
