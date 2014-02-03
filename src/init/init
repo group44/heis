@@ -1,0 +1,16 @@
+package init
+
+import (
+	"net"
+)
+
+
+func SetNodeList(addr string) []string {
+	list := [1]string
+}
+
+func SetOrderTable() {
+
+}
+
+

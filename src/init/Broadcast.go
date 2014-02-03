@@ -1,7 +1,0 @@
-package init
-
-import (
-
-)
-
-

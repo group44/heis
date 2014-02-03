@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
-	"initElevator"
+	//"init"
+	"comm"
 	//"net"
 	//"os"
 )
 
 func main() {
 	fmt.Println("Hello, world!\n")
-	initElevator.PrintBroadcast()
+	init.PrintBroadcast()
+
+	comm.Establish()
 }

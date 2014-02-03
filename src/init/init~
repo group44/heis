@@ -1,0 +1,19 @@
+package init
+
+import (
+	"net"
+)
+
+
+
+
+
+func setNodeList(nodeslice slice) {
+	
+}
+
+func setOrderTable() {
+
+}
+
+
