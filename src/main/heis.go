@@ -2,10 +2,15 @@ package main
 
 import (
 	"fmt"
-	"comm"
+	"../comm"
 	"net"
+	"time"
 	//"os"
 )
+
+
+// Husk: TimeoutCheck som egen routine
+
 
 func main() {
 	fmt.Println("CreateSocket begin")
@@ -27,5 +32,17 @@ func main() {
 	groupconn.Close()
 
 	
+	// Map-test
+	
+	timer := time.NewTimer(1 * time.Second)
+	peermap := make(map[string]time.Timer)
+	peermap["testaddress"] = *timer
+	fmt.Println(peermap["testaddress"])
+	
+	
 
+
+
+
+	fmt.Println("Success")
 }
