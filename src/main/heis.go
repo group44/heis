@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"../comm"
 	"net"
-	"time"
+	//"time"
 	//"os"
 )
 
 
 // Husk: TimeoutCheck som egen routine
+// Peer timeout etter 1 sec?
 
 
 func main() {
@@ -23,7 +24,16 @@ func main() {
 	groupconn, err := net.ListenMulticastUDP("udp", nil, groupaddr)
 	comm.CheckError(err)
 	
-	fmt.Println("CreateSocket end")	
+	fmt.Println("CreateSocket end")
+	
+	// Multicast receive test
+	fmt.Println("Multicast recieve test begin")
+	
+	a := make([]byte, 256)
+	_, casterAddr, _ := groupconn.ReadFromUDP(a)
+	fmt.Println(casterAddr)
+	
+	fmt.Println("Multicast recieve test end")
 
 	var b = make([]byte, 256)
 	comm.CastData(b, groupconn, localconn, groupaddr)
@@ -33,11 +43,12 @@ func main() {
 
 	
 	// Map-test
-	
+	/*
 	timer := time.NewTimer(1 * time.Second)
 	peermap := make(map[string]time.Timer)
 	peermap["testaddress"] = *timer
 	fmt.Println(peermap["testaddress"])
+	*/
 	
 	
 
