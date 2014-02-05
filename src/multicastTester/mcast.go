@@ -11,7 +11,7 @@ func main() {
 	gaddr, _ := net.ResolveUDPAddr("udp4", "224.0.0.2:12000")
 	
 	lconn, _ := net.ListenUDP("udp", laddr)
-	data := make([]byte, 256)
+	data := make([]byte, 1)
 	
 	for {
 		_, _ = lconn.WriteToUDP(data, gaddr)

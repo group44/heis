@@ -3,6 +3,8 @@ package comm
 import (
 	"net"
 	"fmt"
+	"sync"
+	"time"
 	//"encoding/json"
 )
 
@@ -16,25 +18,54 @@ func CheckError(err error) {
 // leser alle incoming packets med ReadFromUDP og sorterer dem etter innholder/lengde.
 // bestemme om en selv er doed ved aa sjekke timeout paa ReadFromMulticast
 
-// Struct for storing addresses of peers in group
-/*
+// Map for storing addresses of peers in group
 type peermap struct {
-	m map[string]
+	mu sync.Mutex
+	m map[string]*time.Timer
 }
 
-// Creates new list of peers
-func NewPeerlist() *peerlist {
-	return &peerlist{s: make([]string, 0)}
+// Creates a map with peer IP as key and timer as element
+func NewPeermap() *peermap {
+	return &peermap{m: make(map[string]*time.Timer)}
 }
 
-// Todo: Make map entry change after timeout. Are "countdowns" allowed as entries in map?
-func UpdatePeerlist(lst *peerlist, a net.Addr) {
-	
+// Checks if peer address is in peer map and has timer value >0
+func CheckPeerLife(p peermap, addr net.Addr) bool {
+	fmt.Println(addr)
+	peeraddr, _, err := net.SplitHostPort(addr.String())
+	CheckError(err)
+	_, present := p.m[peeraddr]
+
+	if present {
+		tValue := <- p.m[peeraddr].C
+		return !tValue.IsZero()
+	}
+	return false
 }
 
-// Adds an address to a peerlist
-func AddToPeerlist(lst *peerlist, a net.Addr) {
-	lst.s = append(lst.s, a.String())	
+// Updates peermap and sets timer from conn input
+func UpdatePeermap(p *peermap, conn *net.UDPConn) {
+	var buf [1024]byte
+	_, addr, err := conn.ReadFrom(buf[:])
+	CheckError(err)
+	peeraddr, _, err := net.SplitHostPort(addr.String())
+	CheckError(err)
+	p.mu.Lock()
+	_, present := p.m[peeraddr]
+	if present {
+		p.m[peeraddr].Reset(5 * time.Second)
+	} else {
+		p.m[peeraddr] = time.NewTimer(5 * time.Second)	
+	}
+	p.mu.Unlock()
+}
+
+// Adds an address (with port number) to a peerlist
+/*
+func AddToPeermap(p *peermap, a net.Addr) {
+	p.mu.Lock()
+	p.m[a.String()] = true
+	p.mu.Unlock()
 }
 */
 
@@ -66,7 +97,7 @@ func CastData(data []byte, conn, lconn *net.UDPConn, gaddr *net.UDPAddr) {
 // Updates an array/slice with the address of the clients sending out multicast packet and whether or not it's alive. If clientlist does not exist -> create. If client already in list -> do nothing. If client reappears after timeout -> do not make a new entry to the list. Instead set it's status as alive.
 //func UpdateClientList()
 
-func SortMulticastPacket(
+//func SortMulticastPacket(
 
 
 
