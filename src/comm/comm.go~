@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	//"encoding/json"
+	"encoding/json"
 )
+
+var timeout time.Duration = 1 * time.Second
 
 func CheckError(err error) {
 	if err != nil {
@@ -21,53 +23,45 @@ func CheckError(err error) {
 // Map for storing addresses of peers in group
 type peermap struct {
 	mu sync.Mutex
-	m map[string]*time.Timer
+	m map[string]time.Time
 }
 
 // Creates a map with peer IP as key and timer as element
 func NewPeermap() *peermap {
-	return &peermap{m: make(map[string]*time.Timer)}
+	return &peermap{m: make(map[string]time.Time)}
 }
 
-// Checks if peer address is in peer map and has timer value >0
+// Checks if peer address is in peer map and time difference is not > 1 sec
 func CheckPeerLife(p peermap, addr net.Addr) bool {
-	fmt.Println(addr)
 	peeraddr, _, err := net.SplitHostPort(addr.String())
+	//fmt.Println(peeraddr)
 	CheckError(err)
 	_, present := p.m[peeraddr]
-
 	if present {
-		tValue := <- p.m[peeraddr].C
-		return !tValue.IsZero()
+		p.mu.Lock()
+		tdiff := time.Since(p.m[peeraddr])
+		p.mu.Unlock()
+		return tdiff <= timeout
 	}
 	return false
 }
 
-// Updates peermap and sets timer from conn input
+
+// Updates peermap and sets discovery time from conn input
 func UpdatePeermap(p *peermap, conn *net.UDPConn) {
-	var buf [1024]byte
-	_, addr, err := conn.ReadFrom(buf[:])
-	CheckError(err)
-	peeraddr, _, err := net.SplitHostPort(addr.String())
-	CheckError(err)
-	p.mu.Lock()
-	_, present := p.m[peeraddr]
-	if present {
-		p.m[peeraddr].Reset(5 * time.Second)
-	} else {
-		p.m[peeraddr] = time.NewTimer(5 * time.Second)	
+	for {
+		var buf [1024]byte
+		_, addr, err := conn.ReadFrom(buf[:])
+		CheckError(err)
+		peeraddr, _, err := net.SplitHostPort(addr.String())
+		CheckError(err)
+		fmt.Println(peeraddr)
+		p.mu.Lock()
+		p.m[peeraddr] = time.Now()
+		p.mu.Unlock()
 	}
-	p.mu.Unlock()
 }
 
-// Adds an address (with port number) to a peerlist
-/*
-func AddToPeermap(p *peermap, a net.Addr) {
-	p.mu.Lock()
-	p.m[a.String()] = true
-	p.mu.Unlock()
-}
-*/
 
 
 // Creates multicast-listener for UDP packages in a multicast group. Error check for network operations -- rename to JoinGroup()?
@@ -87,17 +81,15 @@ func ReceiveData(conn *net.UDPConn) ([]byte) {
 	return data
 }
 
-func CastData(data []byte, conn, lconn *net.UDPConn, gaddr *net.UDPAddr) {
+// Testing JSON
+func CastData(data string, conn, lconn *net.UDPConn, gaddr *net.UDPAddr) {
 	fmt.Println("CastData begin")
-	_, _ = lconn.WriteToUDP(data, gaddr)
+	encoder := json.NewEncoder(conn)
+	encoder.Encode(data)
+	//_, err := lconn.WriteToUDP(data, gaddr)
+	//CheckError(err)
 	fmt.Println("CastData end")
 }
-
-
-// Updates an array/slice with the address of the clients sending out multicast packet and whether or not it's alive. If clientlist does not exist -> create. If client already in list -> do nothing. If client reappears after timeout -> do not make a new entry to the list. Instead set it's status as alive.
-//func UpdateClientList()
-
-//func SortMulticastPacket(
 
 
 
