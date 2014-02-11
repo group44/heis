@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 	"encoding/json"
+	"../elev"
 )
 
 var timeout time.Duration = 1 * time.Second
@@ -51,9 +52,11 @@ func CheckPeerLife(p peermap, addr net.Addr) bool {
 func UpdatePeermap(p *peermap, conn *net.UDPConn) {
 	for {
 		var buf [1024]byte
-		_, addr, err := conn.ReadFrom(buf[:])
+		_, addr, err := conn.ReadFromUDP(buf[:])
+		fmt.Println(err)
 		CheckError(err)
 		peeraddr, _, err := net.SplitHostPort(addr.String())
+		fmt.Println(peeraddr)
 		CheckError(err)
 		fmt.Println(peeraddr)
 		p.mu.Lock()
@@ -68,25 +71,33 @@ func CreateSocket() {
 }
 
 // Receive data from multicast socket. Returns number of bytes read and the return address of the packet. Can be made to timeout and return an error after a fixed time limit; see SetDeadline and SetReadDeadline.
-func ReceiveData(conn *net.UDPConn) ([]byte) {
-	fmt.Println("ReceiveData begin")
-	data := make([]byte, 256)
-	_, _, err := conn.ReadFromUDP(data)
-	CheckError(err)
-	fmt.Println("read", string(data))
-	fmt.Println("ReceiveData end")
+func ReceiveData(conn *net.UDPConn) elev.Order {
+	//fmt.Println("ReceiveData begin")
+	data := elev.Order{}
+	decoder := json.NewDecoder(conn)
+	decoder.Decode(data)
+	fmt.Println("Received: ")
+	fmt.Println(data)
+	//fmt.Println("ReceiveData end")
 	return data
 }
 
 // Testing JSON
-func CastData(data struct, conn *net.UDPConn, lconn *net.UDPConn, gaddr *net.UDPAddr) {
-	fmt.Println("CastData begin")
-	b, _ := json.Marshal(data)
-	fmt.Println(b)
-	//_, err := lconn.WriteToUDP(data, gaddr)
-	//CheckError(err)
-	fmt.Println("CastData end")
+func CastData(data elev.Order, conn *net.UDPConn, lconn *net.UDPConn, gaddr *net.UDPAddr) {
+	//fmt.Println("CastData begin")
+	encoder := json.NewEncoder(conn)
+	encoder.Encode(data)
+	fmt.Println("Sent: ")
+	fmt.Println(data)
+	//fmt.Println("CastData end")
 }
 
+
+func ReceiveTest(c *net.UDPConn, b []byte) {
+	for {
+		c.ReadFromUDP(b)
+		fmt.Println(b)
+	}
+}
 
 

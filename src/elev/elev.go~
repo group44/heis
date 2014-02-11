@@ -2,11 +2,11 @@ package elev
 
 
 
-type order struct {
-	floor string
+type Order struct {
+	floor int
 	dir int
 }
 
-func NewOrder(f string, d int) order {
+func NewOrder(f int, d int) Order {
 	return order{f, d}
 }

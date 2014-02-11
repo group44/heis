@@ -1,7 +1,7 @@
 package main
 
 import (
-    //"fmt"
+    "fmt"
     "net"
     "time"
 )
@@ -14,7 +14,8 @@ func main() {
 	data := make([]byte, 1)
 	
 	for {
-		_, _ = lconn.WriteToUDP(data, gaddr)
+		lconn.WriteToUDP(data, gaddr)
 		time.Sleep(500 * time.Millisecond)
+		fmt.Println("ok")
 	}
 }
