@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"../comm"
+	//"../cost"
+	"../elev"
 	"net"
 	//"time"
 	//"os"
@@ -11,7 +13,6 @@ import (
 
 
 func main() {
-	fmt.Println("CreateSocket begin")
 
 	localaddr, err := net.ResolveUDPAddr("udp4", ":0")
 	groupaddr, err := net.ResolveUDPAddr("udp4", "224.0.0.2:12000")
@@ -24,7 +25,7 @@ func main() {
 	groupconn, err := net.ListenMulticastUDP("udp", nil, groupaddr)
 	comm.CheckError(err)
 	
-	fmt.Println("CreateSocket end")
+	fmt.Println("Sockets created successfully")
 	
 	// Map functions-test
 	//testmap := comm.NewPeermap()
@@ -37,9 +38,16 @@ func main() {
 		fmt.Println(comm.CheckPeerLife(*testmap, testaddr1))
 	}
 	*/
+	
+	//Test of sending/recieving JSON
+	testOrder := elev.NewOrder(2, 1)
+	fmt.Println(testOrder)
+	
+	comm.CastData(testOrder, groupconn, localconn, groupaddr)
+	
 
 	localconn.Close()
 	groupconn.Close()
 
-	fmt.Println("Success")
+	fmt.Println("End")
 }

@@ -63,9 +63,6 @@ func UpdatePeermap(p *peermap, conn *net.UDPConn) {
 }
 
 
-
-// Creates multicast-listener for UDP packages in a multicast group. Error check for network operations -- rename to JoinGroup()?
-
 // This is in main() for now
 func CreateSocket() {
 }
@@ -82,10 +79,10 @@ func ReceiveData(conn *net.UDPConn) ([]byte) {
 }
 
 // Testing JSON
-func CastData(data string, conn, lconn *net.UDPConn, gaddr *net.UDPAddr) {
+func CastData(data struct, conn *net.UDPConn, lconn *net.UDPConn, gaddr *net.UDPAddr) {
 	fmt.Println("CastData begin")
-	encoder := json.NewEncoder(conn)
-	encoder.Encode(data)
+	b, _ := json.Marshal(data)
+	fmt.Println(b)
 	//_, err := lconn.WriteToUDP(data, gaddr)
 	//CheckError(err)
 	fmt.Println("CastData end")
