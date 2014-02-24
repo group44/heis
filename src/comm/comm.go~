@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	"encoding/json"
+	"encoding/gob"
 	"../elev"
 	"os"
 )
@@ -71,25 +71,29 @@ func CreateSocket() {
 
 // Receive data from multicast socket. Returns number of bytes read and the return address of the packet. Can be made to timeout and return an error after a fixed time limit; see SetDeadline and SetReadDeadline.
 func ReceiveData(conn *net.UDPConn) {
-	b := make([]byte, 512)
-	var data elev.Order
-	conn.ReadFromUDP(b)
-	fmt.Println(b)
-	err := json.Unmarshal(b, &data)
+	data := elev.Order{}
+	decoder := gob.NewDecoder(conn)
+	err := decoder.Decode(&data)
 	CheckError(err)
-	fmt.Println("Received: ")
 	fmt.Println(data)
 }
 
 // Testing JSON
-func CastData(data elev.Order, conn *net.UDPConn) {	
-	b, err := json.Marshal(data)
+/*
+func CastData(data elev.Order, conn *net.UDPConn) {
+	encoder := gob.NewEncoder(conn)
+	err := encoder.Encode(data)
 	CheckError(err)
-	conn.Write(b)
-	fmt.Println("Sent: ")
 	fmt.Println(data)
 }
+*/
 
+func CastData(data elev.Order, conn *net.UDPConn) {
+	encoder := gob.NewEncoder(conn)
+	err := encoder.Encode(data)
+	CheckError(err)
+	fmt.Println(data)
+}
 
 func ReceiveTest(c *net.UDPConn, b []byte) {
 	c.ReadFromUDP(b)

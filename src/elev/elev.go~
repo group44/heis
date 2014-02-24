@@ -3,10 +3,10 @@ package elev
 
 
 type Order struct {
-	floor int
-	dir int
+	FLOOR int
+	DIR int
 }
 
 func NewOrder(f int, d int) Order {
-	return order{f, d}
+	return Order{f, d}
 }

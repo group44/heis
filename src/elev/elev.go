@@ -3,8 +3,7 @@ package elev
 
 
 type Order struct {
-	floor int
-	dir int
+	FLOOR, DIR int
 }
 
 func NewOrder(f int, d int) Order {

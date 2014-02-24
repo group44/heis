@@ -58,14 +58,15 @@ func main() {
 	//Test of sending/recieving JSON
 	
 	testOrder := elev.NewOrder(2, 1)
-	b := make([]byte, 512)
+	fmt.Println("testOrder created")
+	//b := make([]byte, 512)
 	//fmt.Println(testOrder)
 	
-	for {
-	
-		comm.CastData(testOrder, bconn)	
-		//comm.ReceiveTest(lconn, b)
-		comm.ReceiveData(lconn)
+	for {	
+		comm.CastOrder(testOrder, bconn)
+		fmt.Println("testOrder sent")
+		comm.ReceiveData(lconn)	
+		fmt.Println("testOrder received")
 		fmt.Println()
 	}	
 	
