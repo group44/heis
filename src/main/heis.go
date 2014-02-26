@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"../comm"
 	//"../cost"
-	"../elev"
+	"../data"
 	"net"
 	//"time"
 	//"os"
@@ -13,6 +13,8 @@ import (
 
 
 func main() {
+
+	const CART_ID int = 1
 
 	//testaddr1, err := net.ResolveUDPAddr("udp4", "129.241.187.152:0")
 	//testaddr2, err := net.ResolveUDPAddr("udp4", "129.241.187.142:0")
@@ -55,21 +57,19 @@ func main() {
 	*/
 	
 	
-	//Test of sending/recieving JSON
-	
-	testOrder := elev.NewOrder(2, 1)
+	var testOrder interface{} = data.NewOrder(0, 1, 1)
+	//var testTable data.OrderTable
 	fmt.Println("testOrder created")
-	//b := make([]byte, 512)
 	//fmt.Println(testOrder)
 	
-	for {	
-		comm.CastData(testOrder, bconn)
-		fmt.Println("testOrder sent")
-		comm.ReceiveData(lconn)	
-		fmt.Println("testOrder received")
-		fmt.Println()
-	}	
-	
+	fmt.Println("testOrder sent:")
+	comm.CastData(testOrder, bconn)
+	fmt.Println("testOrder received:")
+	comm.ReceiveData(lconn)	
+	fmt.Println()
+		
+	//data.ClaimOrder(testOrder, &testTable)
+	//fmt.Println(testTable)
 	
 
 	lconn.Close()
