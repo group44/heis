@@ -1,16 +1,53 @@
-package elev_driver
+package driver
 
+// Declare them in other file?
+const N_FLOORS = 4
+const N_BUTTONS = 4
 
+// Replacing typedef enum from C-code
+type elev_button_type_t int
 
+const (
 
+	BUTTON_CALL_UP elev_button_type_t = 0
+   BUTTON_CALL_DOWN elev_button_type_t = 1
+   BUTTON_COMMAND elev_button_type_t = 2
 
+)
 
-static const int button_channel_matrix[N_FLOORS][N_BUTTONS] = {
-    {FLOOR_UP1, FLOOR_DOWN1, FLOOR_COMMAND1},
-    {FLOOR_UP2, FLOOR_DOWN2, FLOOR_COMMAND2},
-    {FLOOR_UP3, FLOOR_DOWN3, FLOOR_COMMAND3},
-    {FLOOR_UP4, FLOOR_DOWN4, FLOOR_COMMAND4},
-};
+var lampChannelMatrix = [N_FLOORS][N_BUTTONS]int{
+
+	{LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},
+   {LIGHT_UP2, LIGHT_DOWN2, LIGHT_COMMAND2},
+   {LIGHT_UP3, LIGHT_DOWN3, LIGHT_COMMAND3},
+   {LIGHT_UP4, LIGHT_DOWN4, LIGHT_COMMAND4},
+
+}
+
+var buttonChannelMatrix = [N_FLOORS][N_BUTTONS]int{
+
+	{FLOOR_UP1, FLOOR_DOWN1, FLOOR_COMMAND1},
+	{FLOOR_UP2, FLOOR_DOWN2, FLOOR_COMMAND2},
+	{FLOOR_UP3, FLOOR_DOWN3, FLOOR_COMMAND3},
+	{FLOOR_UP4, FLOOR_DOWN4, FLOOR_COMMAND4},
+
+}
+
+/*
+func elev_init() int {
+	// Init hardware
+	if !io_init() {
+		return 0
+	}
+	
+	// Zero all floor button lamps
+	for i := 0; i < N_FLOORS; i++ {
+		if i != 0 {
+			elev_set_button_lamp(BUTTON_CALL_DOWN)
+}
+*/
+
+/*
 
 int elev_get_button_signal(elev_button_type_t button, int floor){
    // assert(floor >= 0);
@@ -28,7 +65,7 @@ int elev_get_button_signal(elev_button_type_t button, int floor){
 }
 
 
-func elev_door_open(){
+func elev_door_open() {
     io_set_bit(DOOR_OPEN)
 }
 
@@ -131,7 +168,7 @@ func elev_clear_all_lights() {
    elev_clear_light(4, ORDER_INTERNAL)
 }
    
-   
+*/
    
    
 
