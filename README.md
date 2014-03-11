@@ -1,1 +1,1 @@
-Heisprosjekt for gruppe W-44 i TTK4145 Sannstidsprogrammering
+Heisprosjekt for gruppe W-4 i TTK4145 Sannstidsprogrammering
