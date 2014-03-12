@@ -5,13 +5,13 @@ const N_FLOORS = 4
 const N_BUTTONS = 4
 
 // Replacing typedef enum from C-code
-type elev_button_type_t int
+type elevButtonTypeT int
 
 const (
 
-	BUTTON_CALL_UP elev_button_type_t = 0
-   BUTTON_CALL_DOWN elev_button_type_t = 1
-   BUTTON_COMMAND elev_button_type_t = 2
+	BUTTON_CALL_UP elevButtonTypeT = 0
+   BUTTON_CALL_DOWN elevButtonTypeT = 1
+   BUTTON_COMMAND elevButtonTypeT = 2
 
 )
 
@@ -24,7 +24,6 @@ var lampChannelMatrix = [N_FLOORS][N_BUTTONS]int{
 
 }
 
-
 var buttonChannelMatrix = [N_FLOORS][N_BUTTONS]int{
 
 	{FLOOR_UP1, FLOOR_DOWN1, FLOOR_COMMAND1},
@@ -35,9 +34,9 @@ var buttonChannelMatrix = [N_FLOORS][N_BUTTONS]int{
 }
 
 /*
-func elev_init() int {
+func ElevInit() int {
 	// Init hardware
-	if !io_init() {
+	if !ioInit() {
 		return 0
 	}
 	
@@ -64,7 +63,16 @@ int elev_get_button_signal(elev_button_type_t button, int floor){
     else
         return 0;
 }
+*/
 
+func elev_set_speed(speed int){
+   if speed > 0 {
+      io_clear_bit(MOTORDIR)
+   }
+   else if speed < 0 {
+      io_set_bit(MOTORDIR)
+   }
+}
 
 func elev_door_open() {
     io_set_bit(DOOR_OPEN)
@@ -90,13 +98,7 @@ func elev_get_obstruction_signal () int {
     return io_read_bit(OBSTRUCTION);
 }
 
-func elev_set_speed(speed int){
-   if speed > 0 {
-      io_clear_bit(MOTORDIR)
-   }
-   else if speed < 0 {
-      io_set_bit(MOTORDIR)
-   }
+
    
    
    
@@ -169,7 +171,7 @@ func elev_clear_all_lights() {
    elev_clear_light(4, ORDER_INTERNAL)
 }
    
-*/
+
    
    
 
