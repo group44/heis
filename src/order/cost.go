@@ -1,4 +1,4 @@
-package cost
+package order
 
 import (
 	//"../comm"
@@ -19,3 +19,7 @@ func RemoveOrder() {
 /*
 func CalculateCost(order struct, orderTable []struct) int {
 } */
+
+func HoldAuction() {
+
+}

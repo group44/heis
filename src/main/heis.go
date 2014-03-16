@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"../comm"
-	//"../cost"
 	"../data"
 	"net"
 	//"time"
@@ -20,7 +19,7 @@ func main() {
 	//testaddr2, err := net.ResolveUDPAddr("udp4", "129.241.187.142:0")
 	//comm.CheckError(err)
 
-	broadcastAddr := "129.241.187.255:12000"
+	//broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
 	listenAddr := ":12000"
 
 	laddr, err := net.ResolveUDPAddr("udp", listenAddr)
