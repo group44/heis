@@ -15,9 +15,10 @@ const (
 	INTERNAL = 2
 )
 
+type GlobalTable [N_FLOORS][2]int
+
 var (
 	localTable [N_FLOORS][3]int
-	type GlobalTable [N_FLOORS][2]int
 )
 
 

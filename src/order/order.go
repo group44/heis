@@ -15,15 +15,18 @@ const (
 	INTERNAL = 2
 )
 
+type GlobalTable [N_FLOORS][2]int
+
 var (
 	localTable [N_FLOORS][3]int
-	type GlobalTable [N_FLOORS][2]int
 )
 
 
 // Todo, check for errors in order type functions
+/*
 func CheckError(err) {
 }
+*/
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne
