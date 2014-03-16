@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"../comm"
-	"../data"
+	"../com"
 	"net"
 	//"time"
 	//"os"
@@ -17,18 +16,18 @@ func main() {
 
 	//testaddr1, err := net.ResolveUDPAddr("udp4", "129.241.187.152:0")
 	//testaddr2, err := net.ResolveUDPAddr("udp4", "129.241.187.142:0")
-	//comm.CheckError(err)
+	//com.CheckError(err)
 
 	//broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
 	listenAddr := ":12000"
 
 	laddr, err := net.ResolveUDPAddr("udp", listenAddr)
 	baddr, err := net.ResolveUDPAddr("udp4", broadcastAddr)
-	comm.CheckError(err)
+	com.CheckError(err)
 
 	lconn, err := net.ListenUDP("udp", laddr)
 	bconn, err := net.DialUDP("udp", nil, baddr)
-	comm.CheckError(err)
+	com.CheckError(err)
 	
 	fmt.Println("Sockets created successfully")
 	
@@ -36,20 +35,20 @@ func main() {
 	
 	/*	
 	for {	
-		comm.ReceiveTest(gconn, data)
+		com.ReceiveTest(gconn, data)
 	}
 	*/
 
 	// Map functions-test
 	/*
-	testmap := comm.NewPeermap()
+	testmap := com.NewPeermap()
 	
 	
-	go comm.UpdatePeermap(testmap, lconn)
+	go com.UpdatePeermap(testmap, lconn)
 	
 	for {
-		fmt.Println(comm.CheckPeerLife(*testmap, testaddr1))
-		fmt.Println(comm.CheckPeerLife(*testmap, testaddr2))
+		fmt.Println(com.CheckPeerLife(*testmap, testaddr1))
+		fmt.Println(com.CheckPeerLife(*testmap, testaddr2))
 		time.Sleep(time.Second)
 		fmt.Println()
 	}
@@ -62,9 +61,9 @@ func main() {
 	//fmt.Println(testOrder)
 	
 	fmt.Println("testOrder sent:")
-	comm.CastData(testOrder, bconn)
+	com.CastData(testOrder, bconn)
 	fmt.Println("testOrder received:")
-	comm.ReceiveData(lconn)	
+	com.ReceiveData(lconn)	
 	fmt.Println()
 		
 	//data.ClaimOrder(testOrder, &testTable)

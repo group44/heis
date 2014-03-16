@@ -5,17 +5,25 @@ import (
 	"fmt"
 )
 
-const CART_ID int = 1
-const N_FLOORS = 4
-const N_BUTTONS = 4
-
-var localTable [N_FLOORS][3]int
-
 const (
+	CART_ID int = 1
+	N_FLOORS = 4
+	N_BUTTONS = 4
+	
 	UP = 0
 	DOWN = 1
 	INTERNAL = 2
 )
+
+var (
+	localTable [N_FLOORS][3]int
+	type GlobalTable [N_FLOORS][2]int
+)
+
+
+// Todo, check for errors in order type functions
+func CheckError(err) {
+}
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne
