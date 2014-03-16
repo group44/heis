@@ -71,29 +71,36 @@ func CreateSocket() {
 
 // Receive data from multicast socket. Returns number of bytes read and the return address of the packet. Can be made to timeout and return an error after a fixed time limit; see SetDeadline and SetReadDeadline.
 
-// Forsoek med sende/motta interface{}
-func ReceiveData(conn *net.UDPConn) {
-	var data interface{}
+// Listens and receives from connection in seperate go-routine
+func ReceiveData(conn *net.UDPConn, peerch chan net.Addr, orderch chan []int, tablech chan [][]int, aucch chan int) {
 	decoder := gob.NewDecoder(conn)
-	err := decoder.Decode(data)
-	CheckError(err)
-	fmt.Println(data)
-}
-
-func CastData(data interface{}, conn *net.UDPConn) {
-	switch v := data.(type) {
-	case order.GlobalTable:
-		god.Register(order.GlobalTable{})
-	case string:
-		gob.Register(string{})
-	case int:
-		gob.Register(int{})
+	for {
+		fmt.Println(conn.RemoteAddr())
+		inc := order.Data{"none", []int{}, [][]int{}, 0}
+		err := decoder.Decode(&inc)
+		CheckError(err)
+		// update peermap
+		peerch <- conn.RemoteAddr()
+		fmt.Println("test2")
+		if inc.Head == "order" {
+			orderch <- inc.Order
+		} else if inc.Head == "table" {
+			tablech <- inc.Table
+		} else if inc.Head == "cost" {
+			aucch <- inc.Cost
+		}
+		
+		fmt.Println(inc)
 	}
-	
+}
+
+func CastData(d order.Data, conn *net.UDPConn) {
 	encoder := gob.NewEncoder(conn)
-	err := encoder.Encode(data)
-	CheckError(err)
-	fmt.Println(data)
+	for {
+		err := encoder.Encode(d)
+		CheckError(err)
+		// fmt.Println(d)
+	}
 }
 
 func ReceiveTest(c *net.UDPConn, b []byte) {
@@ -101,19 +108,21 @@ func ReceiveTest(c *net.UDPConn, b []byte) {
 	fmt.Println(b)
 }
 
-
-
-/*
-func CastData(data data.Order, conn *net.UDPConn) {
-	encoder := gob.NewEncoder(conn)
-	err := encoder.Encode(data)
-	CheckError(err)
-	fmt.Println(data)
+func ChannelTester(c1 chan net.Addr, c2 chan []int, c3 chan [][]int, c4 chan int) {
+	for {
+		select {
+		case <- c1:
+			fmt.Println("c1 read")
+		case <- c2:
+			fmt.Println("c2 read")
+		case <- c3:
+			fmt.Println("c3 read")
+		case <- c4:
+			fmt.Println("c4 read")
+		}
+	}
 }
 
-func ReceiveTest(c *net.UDPConn, b []byte) {
-	c.ReadFromUDP(b)
-	fmt.Println(b)
-}
-*/
+
+
 

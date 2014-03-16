@@ -41,7 +41,7 @@ func main() {
 
 	
 	go com.CastData(testOrder, bconn)
-	go com.ChannelTester(peerch, orderch, tablech, aucch)
+	go com.ChannelTester(peerch)
 	com.ReceiveData(lconn, peerch, orderch, tablech, aucch)
 
 	

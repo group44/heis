@@ -3,6 +3,7 @@ package order
 import (
 	"../driver"
 	"fmt"
+	"os"
 )
 
 const (
@@ -15,18 +16,25 @@ const (
 	INTERNAL = 2
 )
 
-type GlobalTable [N_FLOORS][2]int
 
 var (
 	localTable [N_FLOORS][3]int
 )
 
-
-// Todo, check for errors in order type functions
-/*
-func CheckError(err) {
+type Data struct {
+	Head string
+	Order []int
+	Table [][]int
+	Cost int
 }
-*/
+
+
+func CheckError(err error) {
+	if err != nil {
+		fmt.Println("Fatal error ", err.Error())
+		os.Exit(1)
+	}
+}
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne
@@ -97,23 +105,5 @@ func Init() {
 func PrintTable(){
 	fmt.Println(localTable)
 }
-/*
-type Order struct {
-	Floor, Dir, Cart int
-}
 
-func NewOrder(f int, d int, c int) Order {
-	return Order{f, d, c}
-}
 
-type OrderTable [4][2]Order
-
-func ClaimOrder(o Order, t *OrderTable) {
-	t[o.Floor][o.Dir].Cart = CART_ID
-}
-
-func InsertOrder(o Order, t *OrderTable) {
-	t[o.Floor][o.Dir] = o
-}
-
-*/
