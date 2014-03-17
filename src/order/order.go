@@ -16,8 +16,8 @@ const (
 
 
 var (
-    localTable types.OrderTable
-    globalTable types.OrderTable
+	LocalOrders types.LocalTable
+	GlobalOrders types.GlobalTable
 )
     
 
@@ -29,40 +29,42 @@ func CheckError(err error) {
 }
 
 // INTERNAL maa erstattes, vurder assert
-// Vurder navn paa denne
-func UpdateLocalTable() {
-	for i := 0; i < types.N_FLOORS; i++ {
-		localTable[i][INTERNAL] = driver.ElevGetButtonSignal(INTERNAL, i)
+// Vurder navn paa denne, denne i en go routine?
+func UpdateLocalTable(lt types.LocalTable) {
+	for i := range lt {
+		if lt[i] != 1 {
+			lt[i] = driver.ElevGetButtonSignal(INTERNAL, i)
+		}
 	}
 }
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne
-func RemoveOrder() {
+func RemoveOrder(lt types.LocalTable) {
 	floor := driver.ElevGetFloorSensorSignal() 
 	dir := driver.ElevGetDirection()
 	if floor != -1 && floor < types.N_FLOORS {
-		localTable[floor][INTERNAL] = 0
-		localTable[floor][dir] = 0
+		lt[floor][INTERNAL] = 0
+		lt[floor][dir] = 0
 	}
 }
 
 // Vurder assert, tar ikke hensyn til retning
-func CheckCurrentFloor() bool {
+func CheckCurrentFloor(lt types.LocalTable) bool {
 	currentFloor := driver.ElevGetFloorSensorSignal()
 	if currentFloor != -1 && currentFloor < types.N_FLOORS {
-		return (localTable[currentFloor][0] == 1 || localTable[currentFloor][1] == 1 || localTable[currentFloor][2] == 1)
+		return (lt[currentFloor][0] == 1 || lt[currentFloor][1] == 1 || lt[currentFloor][2] == 1)
 	}
 	return false
 }
 
 // For enkel, returnerer bare den foerste ordren den finner. Kan gjoeres om til aa returnere flere verdier
-func CheckAllFloors() int {
+func CheckAllFloors(lt types.LocalTable) int {
 	currentFloor := driver.ElevGetFloorSensorSignal()
-	for floor := range localTable {
+	for floor := range LocalTable {
 		if floor != currentFloor {
-			for i := 0; i < len(localTable[floor]); i++ {
-				if localTable[floor][i] == 1 {
+			for i := 0; i < len(LocalTable[floor]); i++ {
+				if LocalTable[floor][i] == 1 {
 					return floor
 				}
 			}
@@ -70,6 +72,7 @@ func CheckAllFloors() int {
 	}
 	return -1
 }
+
 
 func FindDirection() int {
 	var diff int
@@ -87,15 +90,12 @@ func FindDirection() int {
 }
 
 func Init() {
-	for floor := range localTable {
-		for i := 0; i < len(localTable[floor]); i++ {
-			localTable[floor][i] = 0
-		}
-	}
+	LocalOrders = types.NewLocalTable()
+	GlobalOrders = types.NewGlobalTable()
 }
 
 func PrintTable(){
-	fmt.Println(localTable)
+	fmt.Println(LocalTable)
 }
 
 

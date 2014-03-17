@@ -5,20 +5,22 @@ import (
 )
 
 // Calculates own cost for an order
-func Calculate(lt types.LocalTable, gt types.GlobalTable, state elevatorState, order []int) int {
+/*
+func Calculate(lt []int, gt [][]int, state elevatorState, order []int) int {
 	// Calculate and return an int describing your degree of availability
 	// 0 is best
 	
 	cost := 5
 	return cost
 }
+*/
 
 // Initiates an "auction" to determine which cart that should dispatch an order.
 // Bids in range 0-20, consider changing this
 func Auction(p *types.PeerMap, aucch chan types.Data, numberOfCarts int) {
-	var carts [numberOfCarts]int
+	carts := make([]int, numberOfCarts)
 	bid := <-aucch
-	for len(carts) < len (p) {
+	for len(carts) < len (p.M) {
 		carts[bid.ID] = bid.Cost
 		bid = <-aucch
 	}
@@ -33,7 +35,7 @@ func Auction(p *types.PeerMap, aucch chan types.Data, numberOfCarts int) {
 		}
 	}
 	if winner == types.CART_ID {
-		go Claim(bid.Order)
+		//go Claim(bid.Order)
 	}
 }
 

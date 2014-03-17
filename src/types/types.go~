@@ -50,6 +50,8 @@ func NewLocalTable() LocalTable {
 			t[i][j] = 0
 		}
 	}
+	
+	t := make([]int, N_FLOORS)
 	return t
 }
 

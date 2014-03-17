@@ -140,17 +140,17 @@ func ElevSetFloorIndicator(floor int) {
    // Binary encoding. One light must always be on.
    switch floor {
    case 0:
-   	IoClearBit(FLOOR_IND1)
-   	IoClearBit(FLOOR_IND2)
+   		IoClearBit(FLOOR_IND1)
+   		IoClearBit(FLOOR_IND2)
    case 1:
 		IoClearBit(FLOOR_IND1)
 		IoSetBit(FLOOR_IND2)
    case 2:
-   	IoSetBit(FLOOR_IND1)
-   	IoClearBit(FLOOR_IND2)
+   		IoSetBit(FLOOR_IND1)
+   		IoClearBit(FLOOR_IND2)
    case 3:
-   	IoSetBit(FLOOR_IND1)
-   	IoSetBit(FLOOR_IND2)
+   		IoSetBit(FLOOR_IND1)
+   		IoSetBit(FLOOR_IND2)
    default:
    }
 }

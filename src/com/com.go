@@ -83,57 +83,60 @@ func UpdatePeerMap(p *types.Peermap, id int, peerch chan int) {
 func CreateSocket() {
 }
 
-// Receive data from multicast socket. Returns number of bytes read and the return address of the packet. Can be made to timeout and return an error after a fixed time limit; see SetDeadline and SetReadDeadline.
 
 // Listens and receives from connection in seperate go-routine
 func ReceiveData(conn *net.UDPConn, peerch chan int, orderch chan []int, tablech chan [][]int, aucch chan int) {
-    fmt.Println("test1")
+	var inc types.Data
 	decoder := gob.NewDecoder(conn)
 	for {
-		inc := types.Data{}
 		err := decoder.Decode(&inc)
-		fmt.Println("test2")
-		CheckError(err)
-		fmt.Println(err)
-		// update peermap
-		peerch <- inc.ID
-		
-		if inc.Head == "order" {
-			orderch <- inc.Order
-		} else if inc.Head == "table" {
-			tablech <- inc.Table
-		} else if inc.Head == "cost" {
-			aucch <- inc.Cost
-		}
 		
 		fmt.Println(inc)
+		CheckError(err)
+		// update peermap
+		peerch <- inc.ID // c1
+		
+		if inc.Head == "order" {
+			orderch <- inc.Order // c2
+		} else if inc.Head == "table" {
+			tablech <- inc.Table // c3
+		} else if inc.Head == "cost" {
+			aucch <- inc.Cost // c4
+		}
+		
+		//fmt.Println(inc)
 	}
 }
 
-func CastData(d types.Data, conn *net.UDPConn) {
+func CastData(conn *net.UDPConn, outch chan types.Data) {
+	var d types.Data
 	encoder := gob.NewEncoder(conn)
 	for {
+		d = <-outch
+		d.T = time.Now() // Sets timestamp on outgoing data
 		err := encoder.Encode(d)
 		CheckError(err)
 		//fmt.Println(d)
 	}
 }
 
+/*
 func ReceiveTest(c *net.UDPConn, b []byte) {
 	c.ReadFromUDP(b)
 	fmt.Println(b)
 }
+*/
 
 func ChannelTester(c1 chan int, c2 chan []int, c3 chan [][]int, c4 chan int) {
 	for {
 		select {
-		case <- c1:
+		case <-c1:
 			fmt.Println("c1 read")
-		case <- c2:
+		case <-c2:
 			fmt.Println("c2 read")
-		case <- c3:
+		case <-c3:
 			fmt.Println("c3 read")
-		case <- c4:
+		case <-c4:
 			fmt.Println("c4 read")
 		}
 	}
@@ -141,7 +144,40 @@ func ChannelTester(c1 chan int, c2 chan []int, c3 chan [][]int, c4 chan int) {
 
 // Create sockets and start go routines
 func Init() {
+	
+	broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
+	listenAddr := ":12000"
 
+	laddr, err := net.ResolveUDPAddr("udp", listenAddr)
+	baddr, err := net.ResolveUDPAddr("udp", broadcastAddr)
+	CheckError(err)
+
+	lconn, err := net.ListenUDP("udp", laddr)
+	bconn, err := net.DialUDP("udp", nil, baddr)
+	CheckError(err)
+	fmt.Println("Sockets created successfully")
+
+	
+	peerch := make(chan int)
+	orderch := make(chan []int)
+	tablech := make(chan [][]int)
+	aucch := make(chan int)
+	outch := make(chan types.Data)
+	fmt.Println("Channels created succesfully")
+	
+	testData := types.Data{"cost", []int{1, 0, 1}, [][]int{}, 2, types.CART_ID, time.Now()}
+
+	go CastData(bconn, outch)
+	go func(){
+	for {
+		outch <- testData
+	}
+	}()
+	//go ChannelTester(peerch, orderch, tablech, aucch)
+	ReceiveData(lconn, peerch, orderch, tablech, aucch)
 }
+
+
+
 
 

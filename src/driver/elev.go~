@@ -1,26 +1,24 @@
 package driver
 
-import "math"
-
-// Declare them in other file?
-const N_FLOORS = 4
-const N_BUTTONS = 4
+import (
+    "../types"
+    "math"
+)
+    
 
 // Global variable containing direction bit
 var lastSpeed int
 
-// Replacing typedef enum from C-code
-type elevButtonTypeT int
 
 const (
 
-	BUTTON_CALL_UP elevButtonTypeT = 0
-   BUTTON_CALL_DOWN elevButtonTypeT = 1
-   BUTTON_COMMAND elevButtonTypeT = 2
+    BUTTON_CALL_UP types.ElevButtonTypeT = 0
+    BUTTON_CALL_DOWN types.ElevButtonTypeT = 1
+    BUTTON_COMMAND types.ElevButtonTypeT = 2
 
 )
 
-var lampChannelMatrix = [N_FLOORS][N_BUTTONS]int{
+var lampChannelMatrix = [types.N_FLOORS][types.N_BUTTONS]int{
 
 	{LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},
    {LIGHT_UP2, LIGHT_DOWN2, LIGHT_COMMAND2},
@@ -29,7 +27,7 @@ var lampChannelMatrix = [N_FLOORS][N_BUTTONS]int{
 
 }
 
-var buttonChannelMatrix = [N_FLOORS][N_BUTTONS]int{
+var buttonChannelMatrix = [types.N_FLOORS][types.N_BUTTONS]int{
 
 	{FLOOR_UP1, FLOOR_DOWN1, FLOOR_COMMAND1},
 	{FLOOR_UP2, FLOOR_DOWN2, FLOOR_COMMAND2},
@@ -46,12 +44,12 @@ func ElevInit() int {
 	}
 	
 	// Zero all floor button lamps
-	for i := 0; i < N_FLOORS; i++ {
+	for i := 0; i < types.N_FLOORS; i++ {
 		if i != 0 {
 			ElevSetButtonLamp(BUTTON_CALL_DOWN, i, 0)
 		}
 		
-		if i != N_FLOORS-1 {
+		if i != types.N_FLOORS-1 {
 			ElevSetButtonLamp(BUTTON_CALL_UP, i, 0)
 		}
 		
@@ -111,7 +109,7 @@ func ElevGetFloorSensorSignal() int {
 }
 
 // Fiks assert
-func ElevGetButtonSignal(button elevButtonTypeT, floor int) int {
+func ElevGetButtonSignal(button types.ElevButtonTypeT, floor int) int {
    // assert(floor >= 0);
     //assert(floor < N_FLOORS);
     //assert(!(button == BUTTON_CALL_UP && floor == N_FLOORS-1));
@@ -153,10 +151,11 @@ func ElevSetFloorIndicator(floor int) {
    case 3:
    	IoSetBit(FLOOR_IND1)
    	IoSetBit(FLOOR_IND2)
+   default:
    }
 }
 
-func ElevSetButtonLamp(button elevButtonTypeT, floor, value int) {
+func ElevSetButtonLamp(button types.ElevButtonTypeT, floor, value int) {
 	/*
 	assert(floor >= 0);
     assert(floor < N_FLOORS);
