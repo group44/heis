@@ -11,6 +11,7 @@ import (
 	//"../order"
 )
 
+	
 
 func CheckError(err error) {
 	if err != nil {
@@ -108,6 +109,19 @@ func ReceiveData(conn *net.UDPConn, peerch chan int, orderch chan []int, tablech
 	}
 }
 
+for{
+	select{
+	case 
+	
+	
+	
+	
+	
+	}
+
+
+}
+
 func CastData(conn *net.UDPConn, outch chan types.Data) {
 	var d types.Data
 	encoder := gob.NewEncoder(conn)
@@ -158,21 +172,19 @@ func Init() {
 	fmt.Println("Sockets created successfully")
 
 	
-	peerch := make(chan int)
-	orderch := make(chan []int)
-	tablech := make(chan [][]int)
-	aucch := make(chan int)
-	outch := make(chan types.Data)
+	
 	fmt.Println("Channels created succesfully")
 	
 	testData := types.Data{"cost", []int{1, 0, 1}, [][]int{}, 2, types.CART_ID, time.Now()}
 
 	go CastData(bconn, outch)
+	
 	go func(){
 	for {
 		outch <- testData
 	}
 	}()
+	
 	//go ChannelTester(peerch, orderch, tablech, aucch)
 	ReceiveData(lconn, peerch, orderch, tablech, aucch)
 }

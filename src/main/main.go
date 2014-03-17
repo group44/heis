@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	//"net"
-	"../types"
+	//"../types"
 	//"../com"
-	"../order"
+	//"../order"
 	//"time"
 )
 
@@ -14,10 +14,13 @@ import (
 func main() {
 
 	const CART_ID int = 0
-
+	
+	
+	
+	
 	//com.Init()
 	order.Init()
-	
+	/*
 	//testMap := com.NewPeerMap()
 	
 	fmt.Println("Test variables created successfully")
@@ -36,6 +39,7 @@ func main() {
 
 	//lconn.Close()
 	//bconn.Close()
+	*/
 
 	fmt.Println("End")
 }

@@ -15,13 +15,22 @@ const (
 	TIMEOUT = 1 * time.Second
 )
 
+var (
+	PeerCh = make(chan int)
+	OrderCh = make(chan []int)
+	TableCh = make(chan [][]int)
+	AucCh = make(chan int)
+	OutCh = make(chan Data)
+
+)
+
 
 
 type (
     ElevButtonTypeT int
     
     LocalTable [][]int
-    GlobalTable [][]int
+    GlobalTable [][]int // row: [down, up, IDd, IDu]
 
     
     // Map for storing addresses of peers in group

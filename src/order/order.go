@@ -106,7 +106,8 @@ func Redistribute() {
 
 
 
-
+// Kommentert ut i Geirs versjon
+/*
 func SetLights(lt types.LocalTable){
     for floor := range lt {
     	for i := 0; i < len(lt [floor]); i++ {
@@ -114,7 +115,7 @@ func SetLights(lt types.LocalTable){
     	}
     }
 }
-
+*/
 
 
 
