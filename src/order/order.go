@@ -32,8 +32,8 @@ func CheckError(err error) {
 // Vurder navn paa denne, denne i en go routine?
 func UpdateLocalTable(lt types.LocalTable) {
 	for i := range lt {
-		if lt[i] != 1 {
-			lt[i] = driver.ElevGetButtonSignal(INTERNAL, i)
+		if lt[i][INTERNAL] != 1 {
+			lt[i][INTERNAL] = driver.ElevGetButtonSignal(INTERNAL, i)
 		}
 	}
 }
@@ -61,10 +61,10 @@ func CheckCurrentFloor(lt types.LocalTable) bool {
 // For enkel, returnerer bare den foerste ordren den finner. Kan gjoeres om til aa returnere flere verdier
 func CheckAllFloors(lt types.LocalTable) int {
 	currentFloor := driver.ElevGetFloorSensorSignal()
-	for floor := range LocalTable {
+	for floor := range lt {
 		if floor != currentFloor {
-			for i := 0; i < len(LocalTable[floor]); i++ {
-				if LocalTable[floor][i] == 1 {
+			for i := 0; i < len(lt [floor]); i++ {
+				if lt[floor][i] == 1 {
 					return floor
 				}
 			}
@@ -77,8 +77,8 @@ func CheckAllFloors(lt types.LocalTable) int {
 func FindDirection() int {
 	var diff int
 	currentFloor := driver.ElevGetFloorSensorSignal()
-	if currentFloor != -1 && currentFloor < types.N_FLOORS {
-		diff = currentFloor - CheckAllFloors()
+	if currentFloor != -1 && currentFloor < types.N_FLOORS && CheckAllFloors(LocalOrders) != -1 {
+		diff = currentFloor - CheckAllFloors(LocalOrders)
 	}
 	if diff > 0 {
 		return 1
@@ -95,7 +95,30 @@ func Init() {
 }
 
 func PrintTable(){
-	fmt.Println(LocalTable)
+	fmt.Println(LocalOrders)
 }
+
+
+func SetLights(lt types.LocalTable){
+    for floor := range lt {
+    	for i := 0; i < len(lt [floor]); i++ {
+    	    driver.ElevSetLights(floor, i, lt[floor][i])
+    	}
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
