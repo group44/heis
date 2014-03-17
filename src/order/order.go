@@ -98,4 +98,12 @@ func PrintTable(){
 	fmt.Println(LocalTable)
 }
 
+// Sends out an order from the global table for a new auction. Called if a peer has disconnected and it has
+// unfinished orders in the global table.
+func Redistribute() {
+
+}
+
+
+
 
