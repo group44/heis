@@ -14,6 +14,8 @@ const (
 	INTERNAL = 2
 )
 
+//channel som henger sammen med lyssetting
+var C1 = make(chan bool)
 
 var (
 	LocalOrders types.LocalTable
@@ -30,12 +32,13 @@ func CheckError(err error) {
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne, denne i en go routine?
-func UpdateLocalTable(lt types.LocalTable) {
+func UpdateLocalTable(lt types.LocalTable, C1 chan bool) {
 	for i := range lt {
 		if lt[i][INTERNAL] != 1 {
 			lt[i][INTERNAL] = driver.ElevGetButtonSignal(INTERNAL, i)
 		}
 	}
+	C1 <- true
 }
 
 // INTERNAL maa erstattes, vurder assert
@@ -102,20 +105,24 @@ func PrintTable(){
 // unfinished orders in the global table.
 func Redistribute() {
 
+<<<<<<< HEAD
 }
 
 
-
-// Kommentert ut i Geirs versjon
-/*
-func SetLights(lt types.LocalTable){
-    for floor := range lt {
-    	for i := 0; i < len(lt [floor]); i++ {
-    	    driver.ElevSetLights(floor, i, lt[floor][i])
-    	}
+=======
+func SetLights(lt types.LocalTable, C1 chan bool){
+    for{
+        <- C1
+        //time.Sleep(10 * time.Millisecond)
+        for floor := range lt {
+        	for i := 0; i < len(lt [floor]); i++ {
+        	    driver.ElevSetLights(floor, i, lt[floor][i])
+        	}
+        }
+>>>>>>> 968b4866f701588f027833cbc7c37cd7d758a684
     }
 }
-*/
+
 
 
 
