@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	//"net"
-	"../types"
+	//"../types"
 	//"../com"
-	//"../order"
+	"../order"
+	"../driver"
+	"../elevator"
 	//"time"
 )
 
@@ -13,29 +15,26 @@ import (
 
 func main() {
 
-	const CART_ID int = 0
-
-	//com.Init()
-	order.Init()
+    //initializeriengn
+    driver.ElevInit()
+    order.Init()
+    elevator.Init()
+    driver.ElevInitLights()
+    elevator.LightsInit()
+    for (driver.ElevGetFloorSensorSignal() == -1){
+        driver.ElevSetSpeed(-200)
+    }
+    driver.ElevSetSpeed(0)
+    
+    //Selveste statemaskinen
+    
+    for {
+        elevator.ControlStateMachine()
+        order.UpdateLocalTable(order.LocalOrders)
+    }
+    
 	
-	//testMap := com.NewPeerMap()
 	
-	fmt.Println("Test variables created successfully")
-
-	//go com.UpdatePeerMap(testMap, CART_ID, peerch) 
 	
-	lt := types.NewLocalTable()
-	gt := types.NewGlobalTable()
-	fmt.Println(lt[0])
-	fmt.Println(gt[0])
-	
-		
-	//data.ClaimOrder(testOrder, &testTable)
-	//fmt.Println(testTable)
-	
-
-	//lconn.Close()
-	//bconn.Close()
-
 	fmt.Println("End")
 }

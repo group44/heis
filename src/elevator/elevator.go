@@ -4,6 +4,7 @@ import (
 	"../order"
 	"../driver"
 	"fmt"
+	"time"
 )
 
 const (
@@ -25,8 +26,8 @@ func ControlStateMachine() {
 	switch state {
 	
 	case IDLE:
-		if order.CheckCurrentFloor() {
-			nextstate = IDLE
+		if order.CheckCurrentFloor(order.LocalOrders) {
+			nextstate = OPEN
 		} else if order.FindDirection() == 1 {
 			nextstate = DOWN
 		} else if order.FindDirection() == 0 {
@@ -37,11 +38,13 @@ func ControlStateMachine() {
 	case OPEN:
 		// if true
 		// timer ferdig
+		//in the ghetto timer
+		time.Sleep(3000 * time.Millisecond)
 		nextstate = IDLE
 		break
 		
 	case UP:
-		if order.CheckCurrentFloor() {
+		if order.CheckCurrentFloor(order.LocalOrders) {
 			nextstate = OPEN
 		} // else if "safety" {	
 			//nextstate = IDLE
@@ -49,7 +52,7 @@ func ControlStateMachine() {
 		break
 		
 	case DOWN:
-		if order.CheckCurrentFloor() {
+		if order.CheckCurrentFloor(order.LocalOrders) {
 			nextstate = OPEN
 		} // else if "safety" {	
 			//nextstate = IDLE
@@ -64,7 +67,7 @@ func ControlStateMachine() {
 	if state != nextstate {
 		fmt.Println(state, nextstate)
 		order.PrintTable()
-		fmt.Println(order.CheckCurrentFloor())
+		fmt.Println(order.CheckCurrentFloor(order.LocalOrders))
 		switch nextstate {
 	
 		case IDLE:
@@ -75,6 +78,7 @@ func ControlStateMachine() {
 		case OPEN:
 			driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
 			driver.ElevSetDoorOpenLamp(ON)
+			order.RemoveOrder(order.LocalOrders)
 			// start timer
 			break
 	
@@ -101,4 +105,18 @@ func Init(){
 	state = IDLE
 	nextstate = IDLE
 }
+
+func LightsInit(){
+    go order.SetLights(order.LocalOrders, order.C1)
+    go FloorLights()
+}
+
+func FloorLights(){
+    for {
+        time.Sleep(10*time.Millisecond)
+        driver.ElevSetFloorIndicator(driver.ElevGetFloorSensorSignal())
+    }
+}
+
+
 
