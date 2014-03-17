@@ -1,13 +1,11 @@
 package order
 
 import (
-	"../driver"
-	//"../com"
-	//"sort"
+	"../types"
 )
 
 // Calculates own cost for an order
-func Calculate(lt localTable, gt globalTable, state elevatorState, order []int) int {
+func Calculate(lt types.LocalTable, gt types.GlobalTable, state elevatorState, order []int) int {
 	// Calculate and return an int describing your degree of availability
 	// 0 is best
 	
@@ -17,7 +15,7 @@ func Calculate(lt localTable, gt globalTable, state elevatorState, order []int) 
 
 // Initiates an "auction" to determine which cart that should dispatch an order.
 // Bids in range 0-20, consider changing this
-func Auction(p *com.peerMap, aucch chan order.Data, numberOfCarts int){
+func Auction(p *types.PeerMap, aucch chan types.Data, numberOfCarts int) {
 	var carts [numberOfCarts]int
 	bid := <-aucch
 	for len(carts) < len (p) {
@@ -34,7 +32,7 @@ func Auction(p *com.peerMap, aucch chan order.Data, numberOfCarts int){
 			winner = i
 		}
 	}
-	if winner == CART_ID {
+	if winner == types.CART_ID {
 		go Claim(bid.Order)
 	}
 }

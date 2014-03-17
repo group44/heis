@@ -1,40 +1,25 @@
 package order
 
 import (
+    "../types"
 	"../driver"
 	"fmt"
 	"os"
-	"time"
+	//"time"
 )
 
 const (
-	CART_ID int = 1
-	N_FLOORS = 4
-	N_BUTTONS = 4
-	
-	UP = 0
+    UP = 0
 	DOWN = 1
 	INTERNAL = 2
 )
 
 
-
-
 var (
-	// Change these into slices
-	localTable [N_FLOORS][3]int // Change to width of 2
-	globalTable [N_FLOORS][3]int
+    localTable types.OrderTable
+    globalTable types.OrderTable
 )
-
-type Data struct {
-	Head string
-	Order []int
-	Table [][]int
-	Cost int
-	ID int
-	T time.Time
-}
-
+    
 
 func CheckError(err error) {
 	if err != nil {
@@ -46,7 +31,7 @@ func CheckError(err error) {
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne
 func UpdateLocalTable() {
-	for i := 0; i < N_FLOORS; i++ {
+	for i := 0; i < types.N_FLOORS; i++ {
 		localTable[i][INTERNAL] = driver.ElevGetButtonSignal(INTERNAL, i)
 	}
 }
@@ -56,7 +41,7 @@ func UpdateLocalTable() {
 func RemoveOrder() {
 	floor := driver.ElevGetFloorSensorSignal() 
 	dir := driver.ElevGetDirection()
-	if floor != -1 && floor < N_FLOORS {
+	if floor != -1 && floor < types.N_FLOORS {
 		localTable[floor][INTERNAL] = 0
 		localTable[floor][dir] = 0
 	}
@@ -65,7 +50,7 @@ func RemoveOrder() {
 // Vurder assert, tar ikke hensyn til retning
 func CheckCurrentFloor() bool {
 	currentFloor := driver.ElevGetFloorSensorSignal()
-	if currentFloor != -1 && currentFloor < N_FLOORS {
+	if currentFloor != -1 && currentFloor < types.N_FLOORS {
 		return (localTable[currentFloor][0] == 1 || localTable[currentFloor][1] == 1 || localTable[currentFloor][2] == 1)
 	}
 	return false
@@ -89,7 +74,7 @@ func CheckAllFloors() int {
 func FindDirection() int {
 	var diff int
 	currentFloor := driver.ElevGetFloorSensorSignal()
-	if currentFloor != -1 && currentFloor < N_FLOORS {
+	if currentFloor != -1 && currentFloor < types.N_FLOORS {
 		diff = currentFloor - CheckAllFloors()
 	}
 	if diff > 0 {

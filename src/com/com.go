@@ -1,24 +1,15 @@
 package com
 
 import (
+	"../types"
 	"net"
 	"fmt"
-	"sync"
+	//"sync"
 	"time"
 	"encoding/gob"
 	"os"
-	//"bytes"
-	"../order"
+	//"../order"
 )
-
-
-// Map for storing addresses of peers in group
-type peermap struct {
-	mu sync.Mutex
-	m map[int]time.Time
-}
-
-var timeout time.Duration = 1 * time.Second
 
 
 func CheckError(err error) {
@@ -28,10 +19,9 @@ func CheckError(err error) {
 	}
 }
 
-
 // Creates a map with peer IP as key and timer as element
-func NewPeerMap() *peermap {
-	return &peermap{m: make(map[int]time.Time)}
+func NewPeerMap() *types.Peermap {
+	return &types.Peermap{M: make(map[int]time.Time)}
 }
 
 // Checks if peer address is in peer map and time difference is not > 1 sec
@@ -52,11 +42,11 @@ func CheckPeerLife(p peermap, addr net.Addr) bool {
 */
 
 // New version using ID instead of peeraddr
-func CheckPeerLife(p peermap, id int) bool {
-	_, present := p.m[id]
+func CheckPeerLife(p types.Peermap, id int) bool {
+	_, present := p.M[id]
 	if present {
-		tdiff := time.Since(p.m[id])
-		return tdiff <= timeout
+		tdiff := time.Since(p.M[id])
+		return tdiff <= types.Timeout
 	}
 	return false
 }
@@ -79,12 +69,12 @@ func UpdatePeermap(p *peermap, conn *net.UDPConn) {
 */
 
 // New version using ID instead of IP
-func UpdatePeerMap(p *peermap, id int, peerch chan int) {
+func UpdatePeerMap(p *types.Peermap, id int, peerch chan int) {
 	for {
 		<- peerch
-		p.mu.Lock()
-		p.m[id] = time.Now()
-		p.mu.Unlock()
+		p.Mu.Lock()
+		p.M[id] = time.Now()
+		p.Mu.Unlock()
 	}
 }
 
@@ -100,7 +90,7 @@ func ReceiveData(conn *net.UDPConn, peerch chan int, orderch chan []int, tablech
 
 	decoder := gob.NewDecoder(conn)
 	for {
-		inc := order.Data{"none", []int{}, [][]int{}, 0, 1, time.Now()}
+		inc := types.Data{"none", []int{}, [][]int{}, 0, 1, time.Now()}
 		err := decoder.Decode(&inc)
 		CheckError(err)
 		// update peermap
@@ -118,7 +108,7 @@ func ReceiveData(conn *net.UDPConn, peerch chan int, orderch chan []int, tablech
 	}
 }
 
-func CastData(d order.Data, conn *net.UDPConn) {
+func CastData(d types.Data, conn *net.UDPConn) {
 	encoder := gob.NewEncoder(conn)
 	for {
 		err := encoder.Encode(d)
