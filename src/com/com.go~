@@ -7,6 +7,7 @@ import (
 	"time"
 	"encoding/gob"
 	"os"
+	"time"
 	//"bytes"
 	"../order"
 )
@@ -15,7 +16,7 @@ import (
 // Map for storing addresses of peers in group
 type peermap struct {
 	mu sync.Mutex
-	m map[string]time.Time
+	m map[int]time.Time
 }
 
 var timeout time.Duration = 1 * time.Second
@@ -30,11 +31,12 @@ func CheckError(err error) {
 
 
 // Creates a map with peer IP as key and timer as element
-func NewPeermap() *peermap {
-	return &peermap{m: make(map[string]time.Time)}
+func NewPeerMap() *peermap {
+	return &peermap{m: make(map[int]time.Time)}
 }
 
 // Checks if peer address is in peer map and time difference is not > 1 sec
+/*
 func CheckPeerLife(p peermap, addr net.Addr) bool {
 	peeraddr, _, err := net.SplitHostPort(addr.String())
 	//fmt.Println(peeraddr)
@@ -48,9 +50,21 @@ func CheckPeerLife(p peermap, addr net.Addr) bool {
 	}
 	return false
 }
+*/
+
+// New version using ID instead of peeraddr
+func CheckPeerLife(p peermap, id int) bool {
+	_, present := p.m[id]
+	if present {
+		tdiff := time.Since(p.m[id])
+		return tdiff <= timeout
+	}
+	return false
+}
 
 
 // Updates peermap and sets discovery time from conn input
+/*
 func UpdatePeermap(p *peermap, conn *net.UDPConn) {
 	for {
 		var buf [1024]byte
@@ -63,6 +77,17 @@ func UpdatePeermap(p *peermap, conn *net.UDPConn) {
 		p.mu.Unlock()
 	}
 }
+*/
+
+// New version using ID instead of IP
+func UpdatePeerMap(p *peermap, id int, peerch chan int) {
+	for {
+		<- peerch
+		p.mu.Lock()
+		p.m[id] = time.Now()
+		p.mu.Unlock()
+	}
+}
 
 
 // This is in main() for now
@@ -72,15 +97,15 @@ func CreateSocket() {
 // Receive data from multicast socket. Returns number of bytes read and the return address of the packet. Can be made to timeout and return an error after a fixed time limit; see SetDeadline and SetReadDeadline.
 
 // Listens and receives from connection in seperate go-routine
-func ReceiveData(conn *net.UDPConn, peerch chan net.Addr, orderch chan []int, tablech chan [][]int, aucch chan int) {
+func ReceiveData(conn *net.UDPConn, peerch chan int, orderch chan []int, tablech chan [][]int, aucch chan int) {
+
 	decoder := gob.NewDecoder(conn)
 	for {
-		fmt.Println(conn.RemoteAddr())
-		inc := order.Data{"none", []int{}, [][]int{}, 0}
+		inc := order.Data{"none", []int{}, [][]int{}, 0, 1, time.Now()}
 		err := decoder.Decode(&inc)
 		CheckError(err)
 		// update peermap
-		peerch <- conn.RemoteAddr()
+		peerch <- inc.ID
 		fmt.Println("test2")
 		if inc.Head == "order" {
 			orderch <- inc.Order
@@ -108,7 +133,7 @@ func ReceiveTest(c *net.UDPConn, b []byte) {
 	fmt.Println(b)
 }
 
-func ChannelTester(c1 chan net.Addr, c2 chan []int, c3 chan [][]int, c4 chan int) {
+func ChannelTester(c1 chan int, c2 chan []int, c3 chan [][]int, c4 chan int) {
 	for {
 		select {
 		case <- c1:

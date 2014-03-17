@@ -4,6 +4,7 @@ import (
 	"../driver"
 	"fmt"
 	"os"
+	"time"
 )
 
 const (
@@ -17,8 +18,12 @@ const (
 )
 
 
+
+
 var (
-	localTable [N_FLOORS][3]int
+	// Change these into slices
+	localTable [N_FLOORS][3]int // Change to width of 2
+	globalTable [N_FLOORS][3]int
 )
 
 type Data struct {
@@ -26,6 +31,8 @@ type Data struct {
 	Order []int
 	Table [][]int
 	Cost int
+	ID int
+	T time.Time
 }
 
 

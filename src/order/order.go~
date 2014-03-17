@@ -3,6 +3,8 @@ package order
 import (
 	"../driver"
 	"fmt"
+	"os"
+	"time"
 )
 
 const (
@@ -15,16 +17,19 @@ const (
 	INTERNAL = 2
 )
 
+// Change these into slices
+type localTable [N_FLOORS][3]int // Change to width of 2
+type globalTable [N_FLOORS][3]int
 
-var (
-	localTable [N_FLOORS][3]int
-)
+
 
 type Data struct {
 	Head string
 	Order []int
 	Table [][]int
 	Cost int
+	ID int
+	T time.Time
 }
 
 
