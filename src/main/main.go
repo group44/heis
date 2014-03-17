@@ -6,7 +6,7 @@ import (
 	"../types"
 	"../com"
 	//"../order"
-	//"time"
+	"time"
 )
 
 
@@ -15,15 +15,15 @@ func main() {
 
 	const CART_ID int = 0
 
-	//broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
+	broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
 	listenAddr := ":12000"
 
 	laddr, err := net.ResolveUDPAddr("udp", listenAddr)
-	//baddr, err := net.ResolveUDPAddr("udp4", broadcastAddr)
+	baddr, err := net.ResolveUDPAddr("udp4", broadcastAddr)
 	com.CheckError(err)
 
 	lconn, err := net.ListenUDP("udp", laddr)
-	//bconn, err := net.DialUDP("udp", nil, baddr)
+	bconn, err := net.DialUDP("udp", nil, baddr)
 	com.CheckError(err)
 	fmt.Println("Sockets created successfully")
 
@@ -34,13 +34,15 @@ func main() {
 	aucch := make(chan int)
 	fmt.Println("Channels created succesfully")
 	
-	testMap := com.NewPeerMap()
-	//testOrder := order.Data{"order", []int{1, 0, 1}, [][]int{}, 2, time.Now()}
+	//testMap := com.NewPeerMap()
+	testOrder := types.Data{"order", []int{1, 0, 1}, [][]int{}, 2, CART_ID, time.Now()}
+	fmt.Println("Test variables created successfully")
 
-	go com.UpdatePeerMap(testMap, CART_ID, peerch) 
-	//go com.CastData(testOrder, bconn)
-	go com.ChannelTester(peerch, orderch, tablech, aucch)
+	go com.CastData(testOrder, bconn)
 	com.ReceiveData(lconn, peerch, orderch, tablech, aucch)
+	//go com.UpdatePeerMap(testMap, CART_ID, peerch) 
+	go com.ChannelTester(peerch, orderch, tablech, aucch)
+	
 
 	
 		

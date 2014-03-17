@@ -46,7 +46,7 @@ func CheckPeerLife(p types.Peermap, id int) bool {
 	_, present := p.M[id]
 	if present {
 		tdiff := time.Since(p.M[id])
-		return tdiff <= types.Timeout
+		return tdiff <= types.TIMEOUT
 	}
 	return false
 }
@@ -87,15 +87,17 @@ func CreateSocket() {
 
 // Listens and receives from connection in seperate go-routine
 func ReceiveData(conn *net.UDPConn, peerch chan int, orderch chan []int, tablech chan [][]int, aucch chan int) {
-
+    fmt.Println("test1")
 	decoder := gob.NewDecoder(conn)
 	for {
-		inc := types.Data{"none", []int{}, [][]int{}, 0, 1, time.Now()}
+		inc := types.Data{}
 		err := decoder.Decode(&inc)
+		fmt.Println("test2")
 		CheckError(err)
+		fmt.Println(err)
 		// update peermap
 		peerch <- inc.ID
-		fmt.Println("test2")
+		
 		if inc.Head == "order" {
 			orderch <- inc.Order
 		} else if inc.Head == "table" {
@@ -113,7 +115,7 @@ func CastData(d types.Data, conn *net.UDPConn) {
 	for {
 		err := encoder.Encode(d)
 		CheckError(err)
-		// fmt.Println(d)
+		//fmt.Println(d)
 	}
 }
 
@@ -137,6 +139,9 @@ func ChannelTester(c1 chan int, c2 chan []int, c3 chan [][]int, c4 chan int) {
 	}
 }
 
+// Create sockets and start go routines
+func Init() {
 
+}
 
 
