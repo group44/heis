@@ -219,21 +219,4 @@ func ElevCheckLight(floor int, button int) int{
     return IoReadBit(lampChannelMatrix[floor][button])
 }
 
-/*
-func elev_clear_all_lights() {
-   ClearDoor()
-   ClearStopButton()
-   elev_clear_light(1, ORDER_UP)
-   elev_clear_light(2, ORDER_UP)
-   elev_clear_light(3, ORDER_UP)
-   elev_clear_light(2, ORDER_DOWN)
-   elev_clear_light(3, ORDER_DOWN)
-   elev_clear_light(4, ORDER_DOWN)
-   elev_clear_light(1, ORDER_INTERNAL)
-   elev_clear_light(2, ORDER_INTERNAL)
-   elev_clear_light(3, ORDER_INTERNAL)
-   elev_clear_light(4, ORDER_INTERNAL)
-}
-   
 
-*/

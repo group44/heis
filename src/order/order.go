@@ -15,29 +15,28 @@ const (
 	INTERNAL = 2
 )
 
-
 var (
 
 	// Channel for signaling type of lights to be set, buffer = 2
 	UpdateLightCh = make(chan string, 2)
+	Direction int
 
 	GlobalOrders types.GlobalTable
 	InternalOrders types.InternalTable
 	
 )
 
-
 func Run() {
 	
 	GlobalOrders = types.NewGlobalTable()
 	InternalOrders = types.NewInternalTable()
+	Direction = UP
 
 	go UpdateInternalTable()
 	go UpdateLights()
-	go CalculateCost()
+	//go CalculateCost()
 
-}
-   
+}  
 
 func CheckError(err error) {
 	if err != nil {
@@ -75,7 +74,7 @@ func UpdateInternalTable() {
 // Vurder navn paa denne
 func ClearOrder() {
 	floor := driver.ElevGetFloorSensorSignal() 
-	dir := driver.ElevGetDirection()
+	dir := GetOrderDirection()
 	
 	if floor < 0 || floor >= types.N_FLOORS {
 		// Assert here
@@ -91,7 +90,6 @@ func ClearOrder() {
 	UpdateLightCh <- "global"
 }
 
-
 // Vurder assert, tar ikke hensyn til retning. Sjekker kun om det er ordre den skal ta selv
 func CheckCurrentFloor() bool {
 	currentFloor := driver.ElevGetFloorSensorSignal()
@@ -100,12 +98,10 @@ func CheckCurrentFloor() bool {
 		//fmt.Println("Invalid floor number troroororoo")
 	} 
 	if currentFloor != -1 {
-		return InternalOrders[currentFloor] == 1/* || GlobalOrders[currentFloor][UP] == types.CART_ID || GlobalOrders[currentFloor][DOWN] == types.CART_ID */
+		return InternalOrders[currentFloor] == 1 || GlobalOrders[currentFloor][UP] == types.CART_ID || GlobalOrders[currentFloor][DOWN] == types.CART_ID
 	}
 	return false
 }
-
-
 
 // MonInternalOrdersors the external buttons on the carts own panel and sends a Data struct wInternalOrdersh order on
 // OutputCh if one is found. Runs in separate go routine.
@@ -145,135 +141,90 @@ func CheckAllFloors() int {
 //skal bli forbedret funksjon som sjekker de andre etasjene og returnerer den nermeste ordren
 func CheckOtherFloors() int{
 	currentFloor := -1
-	dir := UP // Maa fikses, maa lagre heisens direction ett sted og hente den her
-		
-	
-	if driver.ElevGetFloorSensorSignal() != -1{
-		currentFloor = driver.ElevGetFloorSensorSignal()
-	} else {
+	dir := GetOrderDirection()
 		x, y := driver.IoReadBit(driver.FLOOR_IND1), driver.IoReadBit(driver.FLOOR_IND2)
-		switch x {
-			case 0:
-				switch y{
-					case 0:
-						currentFloor = 0
-					case 1:
-						currentFloor = 1
-				}
-				
-			case 1:
-				switch y{
-					case 0:
-						currentFloor = 2
-					case 1:
-						currentFloor = 3
-				}
-		}
+	switch x {
+		case 0:
+			switch y{
+				case 0:
+					currentFloor = 0
+				case 1:
+					currentFloor = 1
+			}
+			
+		case 1:
+			switch y{
+				case 0:
+					currentFloor = 2
+				case 1:
+					currentFloor = 3
+			}
 	}
-	
 	
 	switch dir {
 		case UP:
-			for floor:=currentFloor; floor<types.N_FLOORS-1;floor++{
+			for floor:=currentFloor; floor<types.N_FLOORS;floor++{
 				if floor != currentFloor{
-					if InternalOrders[floor] == 1 || GlobalOrders[floor][UP] == 1{
+					if InternalOrders[floor] == 1 || GlobalOrders[floor][UP] == types.CART_ID{
 						return floor
 					}
 				}
 			}
 			for floor:=currentFloor; floor>=0;floor--{
 				if floor != currentFloor{
-					if InternalOrders[floor] == 1 || GlobalOrders[floor][UP] == 1{
+					if InternalOrders[floor] == 1 || GlobalOrders[floor][UP] == types.CART_ID{
 						return floor
 					}
 				}
 			}
+			ChangeOrderDirection(DOWN)
+			fmt.Println("Order direction changed too DOWN")
 			
 		case DOWN:
+			for floor:=currentFloor; floor>=0;floor--{
+				if floor != currentFloor{
+					if InternalOrders[floor] == 1 || GlobalOrders[floor][DOWN] == types.CART_ID{
+						return floor
+					}
+				}
+			}
+
 			for floor:=currentFloor; floor<types.N_FLOORS;floor++{
 				if floor != currentFloor{
-					if InternalOrders[floor] == 1 || GlobalOrders[floor][DOWN] == 1{
+					if InternalOrders[floor] == 1 || GlobalOrders[floor][DOWN] == types.CART_ID{
 						return floor
 					}
 				}
 			}
-			for floor:=currentFloor; floor>0;floor--{
-				if floor != currentFloor{
-					if InternalOrders[floor] == 1 || GlobalOrders[floor][DOWN] == 1{
-						return floor
-					}
-				}
-			}
+			ChangeOrderDirection(UP)
+			fmt.Println("Order direction changed too UP")
 	}
-	
-	
-	
-
-
-
-	for floor := range InternalOrders {
-		if floor != currentFloor {
-		
-		}
-		}
 	return -1
 }
 
+func ChangeOrderDirection(dir int){
+	Direction = dir
+}
 
+func GetOrderDirection() int {
+	return Direction
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+func PrintOrderDirection(){
+	fmt.Println("Order direction:")
+	fmt.Println(Direction)
+}
 
 func FindDirection() int {
 	var diff int
 	currentFloor := driver.ElevGetFloorSensorSignal()
-	if currentFloor != -1 && currentFloor < types.N_FLOORS && CheckAllFloors() != -1 {
-		diff = currentFloor - CheckAllFloors()
+	if currentFloor != -1 && currentFloor < types.N_FLOORS && CheckOtherFloors() != -1 {
+		diff = currentFloor - CheckOtherFloors()
 	}
 	if diff > 0 {
-		return 1
+		return DOWN
 	} else if diff < 0 {
-		return 0
+		return UP
 	} else {
 		return -1
 	}
@@ -293,22 +244,6 @@ func PrintTable(){
 func Redistribute() {
 
 }
-
-
-/*
-func SetLights(lt types.InternalTable, gt types.GlobalTable){
-    for{
-        <- UpdateLightCh
-        //time.Sleep(10 * time.Millisecond)
-        for floor := range lt {
-        	for i := 0; i < len(lt [floor]); i++ {
-        	    driver.ElevSetLights(floor, i, lt[floor][i])
-        	}
-        }
-    }
-}
-*/
-
 
 // In separate goroutine
 func UpdateLights() {

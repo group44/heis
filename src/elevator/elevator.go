@@ -101,7 +101,7 @@ func ControlStateMachine() {
 	if state != nextstate {
 		fmt.Println(state, nextstate)
 		order.PrintTable()
-		fmt.Println(order.CheckCurrentFloor())
+		order.PrintOrderDirection()
 		switch nextstate {
 	
 		case IDLE:
