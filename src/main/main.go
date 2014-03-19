@@ -4,45 +4,28 @@ import (
 	"fmt"
 	//"net"
 	//"../types"
-	//"../com"
+	"../com"
 	"../order"
+	//"../driver"
 	"../elevator"
 	//"time"
 )
 
-
+const CART_ID int = 1
 
 func main() {
 
-	localOrders := order.NewLocalTable()
-	elevator.Init()
-	for {
-		elevator.ControlStateMachine()
-	}
-	//go com.Run()
-	//go elevator.init()
-	//order.Run()
+    done := make(chan bool)
 
-	/*
-	//testMap := com.NewPeerMap()
-	
-	fmt.Println("Test variables created successfully")
+    go order.Run()
+    go com.Run()
+    go elevator.Run()
 
-	//go com.UpdatePeerMap(testMap, CART_ID, peerch) 
-	
-	lt := types.NewLocalTable()
-	gt := types.NewGlobalTable()
-	fmt.Println(lt[0])
-	fmt.Println(gt[0])
-	
-		
-	//data.ClaimOrder(testOrder, &testTable)
-	//fmt.Println(testTable)
-	
+    /*
+    //Todo
+    go order.Run()
+    */
 
-	//lconn.Close()
-	//bconn.Close()
-	*/
-
-	fmt.Println("End")
+    <- done
+    fmt.Println("End")
 }

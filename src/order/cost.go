@@ -3,6 +3,7 @@ package order
 import (
 	"../types"
 	"../com"
+	"math/rand"
 )
 
 
@@ -13,7 +14,7 @@ func TestDistribute() {
 
 // Calculates own cost for an order
 /*
-func Calculate(lt []int, gt [][]int, state elevatorState, order []int) int {
+func CalculateCost(lt []int, gt [][]int, state elevatorState, order []int) int {
 	// Calculate and return an int describing your degree of availability
 	// 0 is best
 	
@@ -21,6 +22,19 @@ func Calculate(lt []int, gt [][]int, state elevatorState, order []int) int {
 	return cost
 }
 */
+
+// Test function, gives random cost
+func CalculateCost() {
+	var cost int
+	order := make([]int, 3)
+	for {
+		order = <- com.OrderCh
+		// Temp
+		cost = rand.Intn(10) + 1
+		// Temp
+		com.OutputCh <- types.Data{Head:"cost", Order:order, Cost:cost}
+	}
+}
 
 // Initiates an "auction" to determine which cart that should dispatch an order.
 // Bids in range 0-10, consider changing this

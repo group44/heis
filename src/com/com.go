@@ -14,6 +14,16 @@ import (
 var peerMap = NewPeerMap()
 var OutputCh = make(chan types.Data)
 
+// Global channels
+	
+//AuctionCh := make(chan int)
+var OrderCh = make(chan []int)
+var TableCh = make(chan [][]int)
+var AuctionCh = make(chan types.Data)
+	
+// Local channels
+var PeerCh = make(chan int)
+
 // Create sockets and start go routines
 func Run() {
 	
@@ -30,23 +40,14 @@ func Run() {
 	
 	fmt.Println("Sockets created successfully")
 
-	// Global channels
 	
-	//OrderCh := make(chan []int)
-	//TableCh := make(chan [][]int)
-	//AuctionCh := make(chan int)
-	OutputCh := make(chan types.Data)
-	
-
-	// Local channels
-	peerCh := make(chan int)
 	
 	fmt.Println("Channels created succesfully")
 	
 	testData := types.Data{"cost", []int{1, 0, 1}, [][]int{}, 2, types.CART_ID, time.Now()}
 
-	go CastData(bConn, OutputCh)
-	go UpdatePeerMap(peerMap, peerCh)
+	go CastData(bConn)
+	go UpdatePeerMap(peerMap)
 
 	for {
 
@@ -84,9 +85,10 @@ func CheckPeerLife(p types.PeerMap, id int) bool {
 
 // Updates peermap and sets discovery time from conn input
 // New version using ID instead of IP
-func UpdatePeerMap(p *types.PeerMap, peerCh chan int) {
+func UpdatePeerMap(p *types.PeerMap) {
+	var id int
 	for {
-		id := <- peerCh
+		id = <- PeerCh
 		p.Mu.Lock()
 		p.M[id] = time.Now()
 		p.Mu.Unlock()
@@ -95,7 +97,7 @@ func UpdatePeerMap(p *types.PeerMap, peerCh chan int) {
 
 
 // Listens and receives from connection in seperate go-routine
-func ReceiveData(conn *net.UDPConn, peerCh chan int, orderch chan []int, tablech chan [][]int, aucch chan int) {
+func ReceiveData(conn *net.UDPConn) {
 	var inc types.Data
 	decoder := gob.NewDecoder(conn)
 	for {
@@ -104,14 +106,14 @@ func ReceiveData(conn *net.UDPConn, peerCh chan int, orderch chan []int, tablech
 		fmt.Println(inc)
 		CheckError(err)
 		// update peermap
-		peerCh <- inc.ID // c1
+		PeerCh <- inc.ID // c1
 		
 		if inc.Head == "order" {
-			orderch <- inc.Order // c2
+			OrderCh <- inc.Order // c2
 		} else if inc.Head == "table" {
-			tablech <- inc.Table // c3
+			TableCh <- inc.Table // c3
 		} else if inc.Head == "cost" {
-			aucch <- inc.Cost // c4
+			AuctionCh <- inc // c4
 		}
 		
 		//fmt.Println(inc)
@@ -119,7 +121,7 @@ func ReceiveData(conn *net.UDPConn, peerCh chan int, orderch chan []int, tablech
 }
 
 
-func CastData(conn *net.UDPConn, OutputCh chan types.Data) {
+func CastData(conn *net.UDPConn) {
 	var d types.Data
 	encoder := gob.NewEncoder(conn)
 	for {
