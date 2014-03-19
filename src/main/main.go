@@ -5,7 +5,8 @@ import (
 	//"net"
 	//"../types"
 	//"../com"
-	//"../order"
+	"../order"
+	"../elevator"
 	//"time"
 )
 
@@ -13,13 +14,15 @@ import (
 
 func main() {
 
-	const CART_ID int = 0
-	
-	
-	
-	
-	//com.Init()
-	order.Init()
+	localOrders := order.NewLocalTable()
+	elevator.Init()
+	for {
+		elevator.ControlStateMachine()
+	}
+	//go com.Run()
+	//go elevator.init()
+	//order.Run()
+
 	/*
 	//testMap := com.NewPeerMap()
 	

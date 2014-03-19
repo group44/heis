@@ -16,22 +16,18 @@ const (
 )
 
 var (
-	PeerCh = make(chan int)
-	OrderCh = make(chan []int)
-	TableCh = make(chan [][]int)
-	AucCh = make(chan int)
-	OutCh = make(chan Data)
+
 
 )
 
 
 
 type (
-    ElevButtonTypeT int
-    
-    LocalTable [][]int
-    GlobalTable [][]int // row: [down, up, IDd, IDu]
 
+	GlobalTable [][]int
+	InternalTable []int
+
+    ElevButtonTypeT int
     
     // Map for storing addresses of peers in group
     PeerMap struct {
@@ -39,7 +35,7 @@ type (
 	    M map[int]time.Time
     }
 
-    // Struct sent over network
+    // Struct for sending data over network
     Data struct {
 	    Head string
 	    Order []int
@@ -51,18 +47,8 @@ type (
 
 )
 
-func NewLocalTable() LocalTable {
-	t := make([][]int, N_FLOORS)
-	for i := range t {
-		t[i] = make([]int, 3)
-		for j := range t[i] {
-			t[i][j] = 0
-		}
-	}
-	return t
-}
 
-func NewGlobalTable() GlobalTable {
+func NewGlobalTable() [][]int {
 	t := make([][]int, N_FLOORS)
 	for i := range t {
 		t[i] = make([]int, 4)
@@ -73,6 +59,9 @@ func NewGlobalTable() GlobalTable {
 	return t
 }
 
-
+func NewInternalTable() []int {
+	t := make([]int, N_FLOORS)
+	return t
+}
 
 

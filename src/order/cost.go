@@ -2,7 +2,13 @@ package order
 
 import (
 	"../types"
+	"../com"
 )
+
+
+func TestDistribute() {
+
+}
 
 
 // Calculates own cost for an order
@@ -38,7 +44,7 @@ func Auction(p *types.PeerMap, aucch chan types.Data, numberOfCarts int) {
 		}
 	}
 	if winner == types.CART_ID {
-		go Claim(GlobalTable, bid)
+		go Claim(GlobalOrders, bid)
 	}
 }
 
@@ -51,12 +57,13 @@ func Claim(table types.GlobalTable, data types.Data) { // order: [floor, dir, ID
 	if table[floor][dir + 1] != 0 {
 		table[floor][dir + 1] = types.CART_ID
 		outData := types.Data{Head: "table", Table: table}
-		types.OutCh <- outData
+		com.OutputCh <- outData
 	}
 }
 
 // Removes a successfully dispatched order from the global table
-func Clear() {
+func ClearGlobal(table types.GlobalTable, data types.Data) {
+
 }
 
 

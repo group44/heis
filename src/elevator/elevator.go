@@ -1,6 +1,7 @@
 package elevator
 
 import (
+	//"../types"
 	"../order"
 	"../driver"
 	"fmt"
@@ -21,12 +22,33 @@ var (
 	currentFloorTest, state, nextstate int
 )
 
+func Run(){
+	
+	// Initialization
+	state = IDLE
+	nextstate = IDLE
+	
+    driver.ElevInit()
+	driver.ElevInitLights()
+    LightsInit()
+    
+    for (driver.ElevGetFloorSensorSignal() == -1){
+        driver.ElevSetSpeed(-200)
+    }
+    driver.ElevSetSpeed(0)
+    
+    //Selveste statemaskinen
+    for {
+        ControlStateMachine()
+        //order.UpdateLocalTable(order.LocalOrders, order.C1)
+    }
+}
 
 func ControlStateMachine() {
 	switch state {
 	
 	case IDLE:
-		if order.CheckCurrentFloor(order.LocalOrders) {
+		if order.CheckCurrentFloor() {
 			nextstate = OPEN
 		} else if order.FindDirection() == 1 {
 			nextstate = DOWN
@@ -44,7 +66,7 @@ func ControlStateMachine() {
 		break
 		
 	case UP:
-		if order.CheckCurrentFloor(order.LocalOrders) {
+		if order.CheckCurrentFloor() {
 			nextstate = OPEN
 		} // else if "safety" {	
 			//nextstate = IDLE
@@ -52,7 +74,7 @@ func ControlStateMachine() {
 		break
 		
 	case DOWN:
-		if order.CheckCurrentFloor(order.LocalOrders) {
+		if order.CheckCurrentFloor() {
 			nextstate = OPEN
 		} // else if "safety" {	
 			//nextstate = IDLE
@@ -67,7 +89,7 @@ func ControlStateMachine() {
 	if state != nextstate {
 		fmt.Println(state, nextstate)
 		order.PrintTable()
-		fmt.Println(order.CheckCurrentFloor(order.LocalOrders))
+		fmt.Println(order.CheckCurrentFloor())
 		switch nextstate {
 	
 		case IDLE:
@@ -78,7 +100,7 @@ func ControlStateMachine() {
 		case OPEN:
 			driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
 			driver.ElevSetDoorOpenLamp(ON)
-			order.RemoveOrder(order.LocalOrders)
+			order.ClearOrder()
 			// start timer
 			break
 	
@@ -101,13 +123,9 @@ func ControlStateMachine() {
 
 }
 
-func Init(){
-	state = IDLE
-	nextstate = IDLE
-}
 
 func LightsInit(){
-    go order.SetLights(order.LocalOrders, order.C1)
+    //go order.SetLights(order.LocalOrders, order.C1)
     go FloorLights()
 }
 
@@ -117,6 +135,3 @@ func FloorLights(){
         driver.ElevSetFloorIndicator(driver.ElevGetFloorSensorSignal())
     }
 }
-
-
-

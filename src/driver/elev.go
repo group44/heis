@@ -6,10 +6,6 @@ import (
 )
     
 
-// Global variable containing direction bit
-var lastSpeed int
-
-
 const (
 
     BUTTON_CALL_UP types.ElevButtonTypeT = 0
@@ -18,24 +14,29 @@ const (
 
 )
 
-var lampChannelMatrix = [types.N_FLOORS][types.N_BUTTONS]int{
+// Global variable containing direction bit
+var (
+
+	lastSpeed int
+
+	lampChannelMatrix = [types.N_FLOORS][types.N_BUTTONS] int {
 
 	{LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},
-   {LIGHT_UP2, LIGHT_DOWN2, LIGHT_COMMAND2},
-   {LIGHT_UP3, LIGHT_DOWN3, LIGHT_COMMAND3},
-   {LIGHT_UP4, LIGHT_DOWN4, LIGHT_COMMAND4},
+   	{LIGHT_UP2, LIGHT_DOWN2, LIGHT_COMMAND2},
+   	{LIGHT_UP3, LIGHT_DOWN3, LIGHT_COMMAND3},
+   	{LIGHT_UP4, LIGHT_DOWN4, LIGHT_COMMAND4},
 
-}
+	}
 
-var buttonChannelMatrix = [types.N_FLOORS][types.N_BUTTONS]int{
+	buttonChannelMatrix = [types.N_FLOORS][types.N_BUTTONS] int {
 
 	{FLOOR_UP1, FLOOR_DOWN1, FLOOR_COMMAND1},
 	{FLOOR_UP2, FLOOR_DOWN2, FLOOR_COMMAND2},
 	{FLOOR_UP3, FLOOR_DOWN3, FLOOR_COMMAND3},
 	{FLOOR_UP4, FLOOR_DOWN4, FLOOR_COMMAND4},
 
-}
-
+	}
+)
 
 func ElevInit() int {
 	// Init hardware
@@ -68,8 +69,12 @@ func ElevInit() int {
 	return 1
 }
 
+// Implement this
+/*
+func CheckError(err) {
 
-
+}
+*/
 
 func ElevSetSpeed(speed int){
 	// In order to sharply stop the elevator, the direction bit is toggled
@@ -213,6 +218,7 @@ func ElevSetLights(floor int, button int, temp int){
 func ElevCheckLight(floor int, button int) int{
     return IoReadBit(lampChannelMatrix[floor][button])
 }
+
 /*
 func elev_clear_all_lights() {
    ClearDoor()
