@@ -172,7 +172,7 @@ func CheckOtherFloors() int{
 	
 	switch dir {
 		case UP:
-			for floor:=currentFloor; floor<types.N_FLOORS;floor++{
+			for floor := currentFloor; floor < types.N_FLOORS; floor++ {
 				if floor != currentFloor{
 					if InternalOrders[floor] == 1 || GlobalOrders[floor][UP] == types.CART_ID{
 						return floor

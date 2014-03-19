@@ -22,7 +22,6 @@ var (
 )
 
 
-
 type (
 
 	GlobalTable [][]int

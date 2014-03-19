@@ -85,4 +85,5 @@ func Claim(data types.Data, table types.GlobalTable) { // order: [floor, dir, ID
 // Removes a successfully dispatched order from the global table
 func ClearGlobal(data types.Data) {
 
+
 }

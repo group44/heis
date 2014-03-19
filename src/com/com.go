@@ -14,7 +14,7 @@ import (
 var PeerMap = NewPeerMap()
 
 // Global channels
-var OutputCh = make(chan types.Data)
+var OutputCh = make(chan types.Data, 5)
 var OrderCh = make(chan []int)
 var TableCh = make(chan [][]int)
 var AuctionCh = make(chan types.Data)
@@ -98,6 +98,7 @@ func CheckPeerLife(p types.PeerMap, id int) bool {
 // New version using ID instead of IP
 func UpdatePeerMap(p *types.PeerMap) {
 	var id int
+
 	for {
 		id = <- peerCh
 		p.Mu.Lock()
@@ -105,6 +106,7 @@ func UpdatePeerMap(p *types.PeerMap) {
 		p.Mu.Unlock()
 		//fmt.Println("peer")
 	}
+
 }
 
 
@@ -112,20 +114,21 @@ func UpdatePeerMap(p *types.PeerMap) {
 func ReceiveData(conn *net.UDPConn) {
 	var inc types.Data
 	decoder := gob.NewDecoder(conn)
+	
 	for {
 		err := decoder.Decode(&inc)
-		
-		
+			
 		CheckError(err)
-		// update peermap
 
+		// update peermap
 		peerCh <- inc.ID // c1
 		
 		if inc.Head == "order" {
 			OrderCh <- inc.Order // c2
 			fmt.Println(inc.Order)
 		} else if inc.Head == "table" {
-			TableCh <- inc.Table // c3
+			order.Globalorders = inc.Table
+			TableCh <- inc.Table // c3 - is this channel needed?
 		} else if inc.Head == "cost" {
 
 			AuctionCh <- inc // c4
@@ -133,12 +136,14 @@ func ReceiveData(conn *net.UDPConn) {
 		
 		//fmt.Println(inc)
 	}
+
 }
 
 
 func CastData(conn *net.UDPConn) {
 	var data types.Data
 	encoder := gob.NewEncoder(conn)
+
 	for {
 		data = <- OutputCh
 		data.ID = types.CART_ID
@@ -147,16 +152,12 @@ func CastData(conn *net.UDPConn) {
 		CheckError(err)
 		fmt.Println(data)
 	}
+	
 }
 
-/*
-func ReceiveTest(c *net.UDPConn, b []byte) {
-	c.ReadFromUDP(b)
-	fmt.Println(b)
-}
-*/
 
 func ChannelTester(c1 chan int, c2 chan []int, c3 chan [][]int, c4 chan int) {
+
 	for {
 		select {
 		case <-c1:
@@ -169,6 +170,5 @@ func ChannelTester(c1 chan int, c2 chan []int, c3 chan [][]int, c4 chan int) {
 			fmt.Println("c4 read")
 		}
 	}
+
 }
-
-
