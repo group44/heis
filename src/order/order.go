@@ -34,7 +34,9 @@ func Run() {
 
 	go UpdateInternalTable()
 	go UpdateLights()
-	//go CalculateCost()
+
+	go CalculateCost()
+	go Auction()
 
 }  
 
