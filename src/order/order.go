@@ -5,7 +5,7 @@ import (
 	"../driver"
 	"fmt"
 	"os"
-	//"time"
+	"time"
 	"../com"
 )
 
@@ -57,12 +57,14 @@ func CheckError(err string) {
 // Vurder navn paa denne, denne i en go routine?
 func UpdateInternalTable() {
 	for {
+		time.Sleep(10*time.Millisecond)
 		for i := range InternalOrders {
 			if InternalOrders[i] != 1 {
-				// mu?
-				InternalOrders[i] = driver.ElevGetButtonSignal(types.N_BUTTONS-1, i)
-				// mu?
-				UpdateLightCh <- "internal"
+				if driver.ElevGetButtonSignal(INTERNAL, i) == 1{
+					InternalOrders[i] = driver.ElevGetButtonSignal(INTERNAL, i)
+					fmt.Println("Internal order table updated")
+					UpdateLightCh <- "internal"
+				}
 			}
 		}
 	}
@@ -74,7 +76,7 @@ func ClearOrder() {
 	floor := driver.ElevGetFloorSensorSignal() 
 	dir := driver.ElevGetDirection()
 	
-	if floor < 1 || floor > types.N_FLOORS {
+	if floor < 0 || floor >= types.N_FLOORS {
 		// Assert here
 		fmt.Println("Invalid floor number")
 	}
@@ -83,7 +85,7 @@ func ClearOrder() {
 		fmt.Println("Invalid dir number")
 	}
 
-	InternalOrders[floor-1], GlobalOrders[dir][floor-1] = 0, 0
+	InternalOrders[floor], GlobalOrders[dir][floor] = 0, 0
 	UpdateLightCh <- "internal"
 	UpdateLightCh <- "global"
 }
@@ -92,14 +94,17 @@ func ClearOrder() {
 // Vurder assert, tar ikke hensyn til retning. Sjekker kun om det er ordre den skal ta selv
 func CheckCurrentFloor() bool {
 	currentFloor := driver.ElevGetFloorSensorSignal()
-	fmt.Println(currentFloor)
-	if currentFloor < 1 || currentFloor > types.N_FLOORS {
+	if currentFloor < 0 || currentFloor >= types.N_FLOORS && currentFloor != -1 {
 		// Assert here
-		fmt.Println("Invalid floor number")
+		//fmt.Println("Invalid floor number troroororoo")
+	} 
+	if currentFloor != -1 {
+		return InternalOrders[currentFloor] == 1/* || GlobalOrders[currentFloor][UP] == types.CART_ID || GlobalOrders[currentFloor][DOWN] == types.CART_ID */
 	}
-	fmt.Println("test1")
-	return InternalOrders[currentFloor-1] == 1 || GlobalOrders[currentFloor-1][0] == types.CART_ID || GlobalOrders[currentFloor-1][1] == types.CART_ID
+	return false
 }
+
+
 
 // MonInternalOrdersors the external buttons on the carts own panel and sends a Data struct wInternalOrdersh order on
 // OutputCh if one is found. Runs in separate go routine.
@@ -135,6 +140,127 @@ func CheckAllFloors() int {
 
 	return -1
 }
+
+//skal bli forbedret funksjon som sjekker de andre etasjene og returnerer den nermeste ordren
+func CheckOtherFloors() int{
+	currentFloor := -1
+	dir := UP // Maa fikses, maa lagre heisens direction ett sted og hente den her
+		
+	
+	if driver.ElevGetFloorSensorSignal() != -1{
+		currentFloor = driver.ElevGetFloorSensorSignal()
+	} else {
+		x, y := driver.IoReadBit(driver.FLOOR_IND1), driver.IoReadBit(driver.FLOOR_IND2)
+		switch x {
+			case 0:
+				switch y{
+					case 0:
+						currentFloor = 0
+					case 1:
+						currentFloor = 1
+				}
+				
+			case 1:
+				switch y{
+					case 0:
+						currentFloor = 2
+					case 1:
+						currentFloor = 3
+				}
+		}
+	}
+	
+	
+	switch dir {
+		case UP:
+			for floor:=currentFloor; floor<types.N_FLOORS-1;floor++{
+				if floor != currentFloor{
+					if InternalOrders[floor] == 1 || GlobalOrders[floor][UP] == 1{
+						return floor
+					}
+				}
+			}
+			for floor:=currentFloor; floor>=0;floor--{
+				if floor != currentFloor{
+					if InternalOrders[floor] == 1 || GlobalOrders[floor][UP] == 1{
+						return floor
+					}
+				}
+			}
+			
+		case DOWN:
+			for floor:=currentFloor; floor<types.N_FLOORS;floor++{
+				if floor != currentFloor{
+					if InternalOrders[floor] == 1 || GlobalOrders[floor][DOWN] == 1{
+						return floor
+					}
+				}
+			}
+			for floor:=currentFloor; floor>0;floor--{
+				if floor != currentFloor{
+					if InternalOrders[floor] == 1 || GlobalOrders[floor][DOWN] == 1{
+						return floor
+					}
+				}
+			}
+	}
+	
+	
+	
+
+
+
+	for floor := range InternalOrders {
+		if floor != currentFloor {
+		
+		}
+		}
+	return -1
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 func FindDirection() int {
@@ -187,16 +313,18 @@ func SetLights(lt types.InternalTable, gt types.GlobalTable){
 func UpdateLights() {
 	var msg string
 	for {
-		//time.Sleep(10 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		msg = <- UpdateLightCh
 
 		switch msg {
 		case "internal":
+			fmt.Println("Internal Lights updated")
 			for i := range InternalOrders {
 				driver.ElevSetLights(i, 2, InternalOrders[i])
 			}
 
 		case "global":
+			fmt.Println("Global Lights updated")
 			for j, k := 0, 0; j < types.N_FLOORS && k < 2; j, k = j+1, k+1 {
 				if GlobalOrders[j][k] != 0 {
 					driver.ElevSetLights(j, k, 1)

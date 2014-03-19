@@ -1,6 +1,7 @@
 package elevator
 
 import (
+	"../types"
 	"../order"
 	"../driver"
 	"fmt"
@@ -19,14 +20,43 @@ const (
 
 var (
 	currentFloorTest, state, nextstate int
+	SafetyFloorCh = make(chan bool)
+	DoorTimerStartCh = make(chan bool) 
+	DoorTimerDoneCh = make(chan bool)
 )
 
+func Run(){
+	
+	// Initialization
+	state = IDLE
+	nextstate = IDLE
+	
+    driver.ElevInit()
+	driver.ElevInitLights()
+    LightsInit()
+    
+    for (driver.ElevGetFloorSensorSignal() == -1){
+        driver.ElevSetSpeed(-200)
+    }
+    driver.ElevSetSpeed(0)
+    
+    //Safety go routine
+    go Safety()
+    //Door timer go routine
+    go DoorTimer()
+    //Selveste statemaskinen
+    
+    for {
+        ControlStateMachine()
+        //order.UpdateLocalTable(order.LocalOrders, order.C1)
+    }
+}
 
 func ControlStateMachine() {
 	switch state {
 	
 	case IDLE:
-		if order.CheckCurrentFloor(order.LocalOrders) {
+		if order.CheckCurrentFloor() {
 			nextstate = OPEN
 		} else if order.FindDirection() == 1 {
 			nextstate = DOWN
@@ -39,24 +69,25 @@ func ControlStateMachine() {
 		// if true
 		// timer ferdig
 		//in the ghetto timer
-		time.Sleep(3000 * time.Millisecond)
-		nextstate = IDLE
+		if <- DoorTimerDoneCh{
+			nextstate = IDLE
+		}
 		break
 		
 	case UP:
-		if order.CheckCurrentFloor(order.LocalOrders) {
+		if order.CheckCurrentFloor() {
 			nextstate = OPEN
-		} // else if "safety" {	
-			//nextstate = IDLE
-		//}
+		}  else if <-SafetyFloorCh {	
+				nextstate = IDLE
+		}
 		break
 		
 	case DOWN:
-		if order.CheckCurrentFloor(order.LocalOrders) {
+		if order.CheckCurrentFloor() {
 			nextstate = OPEN
-		} // else if "safety" {	
-			//nextstate = IDLE
-		//}
+		}  else if <-SafetyFloorCh {	
+			nextstate = IDLE
+		}
 		break
 		
 	default:
@@ -67,7 +98,7 @@ func ControlStateMachine() {
 	if state != nextstate {
 		fmt.Println(state, nextstate)
 		order.PrintTable()
-		fmt.Println(order.CheckCurrentFloor(order.LocalOrders))
+		fmt.Println(order.CheckCurrentFloor())
 		switch nextstate {
 	
 		case IDLE:
@@ -78,8 +109,9 @@ func ControlStateMachine() {
 		case OPEN:
 			driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
 			driver.ElevSetDoorOpenLamp(ON)
-			order.RemoveOrder(order.LocalOrders)
-			// start timer
+			order.ClearOrder()
+			//start timer
+			DoorTimerStartCh <- true
 			break
 	
 		case UP:
@@ -101,22 +133,60 @@ func ControlStateMachine() {
 
 }
 
-func Init(){
-	state = IDLE
-	nextstate = IDLE
-}
 
 func LightsInit(){
-    go order.SetLights(order.LocalOrders, order.C1)
+    //go order.SetLights(order.LocalOrders, order.C1)
     go FloorLights()
 }
 
 func FloorLights(){
     for {
         time.Sleep(10*time.Millisecond)
-        driver.ElevSetFloorLightIndicator(driver.ElevGetFloorSensorSignal())
+        driver.ElevSetFloorIndicator(driver.ElevGetFloorSensorSignal())
     }
 }
+
+
+// Kjores i go routine, kan endre channel til string og legge til flere safety ting som nodstopp og obs her lett
+func Safety(){
+	for{
+		if (driver.ElevGetFloorSensorSignal() == 0 && !(order.CheckCurrentFloor())){
+			//skriv til channel
+			SafetyFloorCh <- true
+		} else if (driver.ElevGetFloorSensorSignal() == (types.N_FLOORS-1) && !(order.CheckCurrentFloor())){
+			//skriv til channel
+			SafetyFloorCh <- true
+		} else {
+			SafetyFloorCh <- false
+		}
+	}
+}
+
+func DoorTimer(){
+	for{
+		if <-DoorTimerStartCh{
+			time.Sleep(3*time.Second)
+			DoorTimerDoneCh <- true
+		} else {
+			DoorTimerDoneCh <- false
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

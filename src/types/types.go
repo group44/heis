@@ -7,7 +7,7 @@ import (
 
 
 const (
-	CART_ID = 0
+	CART_ID = 1
 	N_FLOORS = 4
 	N_BUTTONS = 4
 	

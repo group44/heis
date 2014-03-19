@@ -1,7 +1,7 @@
 package elevator
 
 import (
-	//"../types"
+	"../types"
 	"../order"
 	"../driver"
 	"fmt"
@@ -20,6 +20,11 @@ const (
 
 var (
 	currentFloorTest, state, nextstate int
+	SafetyFloorCh = make(chan bool)
+	DoorTimerStartCh = make(chan bool) 
+	DoorTimerDoneCh = make(chan bool)
+	ElevatorDirectionCh = make(chan string)
+	Temp bool
 )
 
 func Run(){
@@ -37,8 +42,13 @@ func Run(){
     }
     driver.ElevSetSpeed(0)
     
+    //Safety go routine
+    //go Safety()
+    //Door timer go routine
     //Selveste statemaskinen
+    go DoorTimer()
     for {
+    	time.Sleep(5*time.Millisecond)
         ControlStateMachine()
         //order.UpdateLocalTable(order.LocalOrders, order.C1)
     }
@@ -61,22 +71,24 @@ func ControlStateMachine() {
 		// if true
 		// timer ferdig
 		//in the ghetto timer
-		time.Sleep(3000 * time.Millisecond)
-		nextstate = IDLE
+		if <-DoorTimerDoneCh{
+			fmt.Println("Timer done")
+			nextstate = IDLE
+		}
 		break
 		
 	case UP:
 		if order.CheckCurrentFloor() {
 			nextstate = OPEN
-		} // else if "safety" {	
-			//nextstate = IDLE
+		} // else if <-SafetyFloorCh {	
+			//	nextstate = IDLE
 		//}
 		break
 		
 	case DOWN:
 		if order.CheckCurrentFloor() {
 			nextstate = OPEN
-		} // else if "safety" {	
+		} // else if <-SafetyFloorCh {	
 			//nextstate = IDLE
 		//}
 		break
@@ -101,7 +113,8 @@ func ControlStateMachine() {
 			driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
 			driver.ElevSetDoorOpenLamp(ON)
 			order.ClearOrder()
-			// start timer
+			//start timer
+			DoorTimerStartCh <- true
 			break
 	
 		case UP:
@@ -135,3 +148,48 @@ func FloorLights(){
         driver.ElevSetFloorIndicator(driver.ElevGetFloorSensorSignal())
     }
 }
+
+
+// Kjores i go routine, kan endre channel til string og legge til flere safety ting som nodstopp og obs her lett
+func Safety(){
+	for{
+		if (driver.ElevGetFloorSensorSignal() == 0 && !(order.CheckCurrentFloor())){
+			//skriv til channel
+			SafetyFloorCh <- true
+		} else if (driver.ElevGetFloorSensorSignal() == (types.N_FLOORS-1) && !(order.CheckCurrentFloor())){
+			//skriv til channel
+			SafetyFloorCh <- true
+		} else {
+			SafetyFloorCh <- false
+		}
+	}
+}
+
+func DoorTimer(){
+	for{
+	time.Sleep(10*time.Millisecond)
+	<- DoorTimerStartCh
+	fmt.Println("Timer started")
+	time.Sleep(3000*time.Millisecond)
+
+	DoorTimerDoneCh <- true
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

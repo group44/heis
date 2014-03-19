@@ -4,7 +4,7 @@ import (
 	"fmt"
 	//"net"
 	//"../types"
-	"../com"
+	//"../com"
 	"../order"
 	//"../driver"
 	"../elevator"
@@ -18,7 +18,7 @@ func main() {
     done := make(chan bool)
 
     go order.Run()
-    go com.Run()
+    //go com.Run()
     go elevator.Run()
 
     /*
