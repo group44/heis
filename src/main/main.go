@@ -17,9 +17,9 @@ func main() {
 
     done := make(chan bool)
 
-    go order.Run()
+    //go order.Run()
     go com.Run()
-    go elevator.Run()
+    //go elevator.Run()
 
     /*
     //Todo

@@ -11,51 +11,49 @@ import (
 	//"../order"
 )
 
-var peerMap = NewPeerMap()
-var OutputCh = make(chan types.Data)
+var PeerMap = NewPeerMap()
 
 // Global channels
-	
-//AuctionCh := make(chan int)
+var OutputCh = make(chan types.Data)
 var OrderCh = make(chan []int)
 var TableCh = make(chan [][]int)
 var AuctionCh = make(chan types.Data)
 	
 // Local channels
-var PeerCh = make(chan int)
+var peerCh = make(chan int)
 
 // Create sockets and start go routines
 func Run() {
 	
 	broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
-	//listenAddr := ":12000"
+	listenAddr := ":12000"
 
-	//lAddr, err := net.ResolveUDPAddr("udp", listenAddr)
+	lAddr, err := net.ResolveUDPAddr("udp", listenAddr)
 	bAddr, err := net.ResolveUDPAddr("udp", broadcastAddr)
 	CheckError(err)
 
-	//lConn, err := net.ListenUDP("udp", lAddr)
+	lConn, err := net.ListenUDP("udp", lAddr)
 	bConn, err := net.DialUDP("udp", nil, bAddr)
 	CheckError(err)
 	
 	fmt.Println("Sockets created successfully")
 
-	
-	
-	fmt.Println("Channels created succesfully")
+	//fmt.Println("Channels created succesfully")
 	
 	testData := types.Data{"cost", []int{1, 0, 1}, [][]int{}, 2, types.CART_ID, time.Now()}
 
 	go CastData(bConn)
-	go UpdatePeerMap(peerMap)
+	go ReceiveData(lConn)
+	go UpdatePeerMap(PeerMap)
 
 	for {
 
 		OutputCh <- testData
+		time.Sleep(10 * time.Millisecond)
 	}
 
-	//go ChannelTester(peerch, orderch, tablech, aucch)
-	//ReceiveData(lconn, peerch, orderch, tablech, aucch)
+	//go ChannelTester()
+	
 }
 
 
@@ -70,6 +68,12 @@ func CheckError(err error) {
 func NewPeerMap() *types.PeerMap {
 	return &types.PeerMap{M: make(map[int]time.Time)}
 }
+
+/*
+func GetPeerMapLength() int {
+	return len(PeerMap)
+}
+*/
 
 // Checks if peer address is in peer map and time difference is not > 1 sec
 // New version using ID instead of peeraddr
@@ -88,7 +92,7 @@ func CheckPeerLife(p types.PeerMap, id int) bool {
 func UpdatePeerMap(p *types.PeerMap) {
 	var id int
 	for {
-		id = <- PeerCh
+		id = <- peerCh
 		p.Mu.Lock()
 		p.M[id] = time.Now()
 		p.Mu.Unlock()
@@ -106,7 +110,7 @@ func ReceiveData(conn *net.UDPConn) {
 		fmt.Println(inc)
 		CheckError(err)
 		// update peermap
-		PeerCh <- inc.ID // c1
+		peerCh <- inc.ID // c1
 		
 		if inc.Head == "order" {
 			OrderCh <- inc.Order // c2
@@ -122,12 +126,13 @@ func ReceiveData(conn *net.UDPConn) {
 
 
 func CastData(conn *net.UDPConn) {
-	var d types.Data
+	var data types.Data
 	encoder := gob.NewEncoder(conn)
 	for {
-		d = <- OutputCh
-		d.T = time.Now() // Sets timestamp on outgoing data
-		err := encoder.Encode(d)
+		data = <- OutputCh
+		data.ID = types.CART_ID
+		data.T = time.Now() // Sets timestamp on outgoing data
+		err := encoder.Encode(data)
 		CheckError(err)
 		//fmt.Println(d)
 	}
