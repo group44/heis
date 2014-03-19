@@ -34,9 +34,10 @@ func Run() {
 
 	go UpdateInternalTable()
 	go UpdateLights()
+	go CheckExternalButtons()
 
 	go CalculateCost()
-	go Auction()
+	go Auction(GlobalOrders)
 
 }  
 
@@ -110,14 +111,20 @@ func CheckCurrentFloor() bool {
 func CheckExternalButtons() {
 	data := types.Data{ Head:"Order" }
 	for {
-
+		time.Sleep(10* time.Millisecond)
 		for i := 0; i < types.N_FLOORS; i++ {
 			if driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) != 0 {
 				data.Order = []int{i, 0}
 				com.OutputCh <- data
+				for (driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) == 1){
+					//time.Sleep(50*time.Millisecond)
+				}
 			} else if driver.ElevGetButtonSignal(driver.BUTTON_CALL_DOWN, i) != 0 {
 				data.Order = []int{i, 1}
 				com.OutputCh <- data
+				for (driver.ElevGetButtonSignal(driver.BUTTON_CALL_DOWN, i) == 1){
+					//time.Sleep(50*time.Millisecond)
+				}
 			}
 		}
 
@@ -180,7 +187,7 @@ func CheckOtherFloors() int{
 				}
 			}
 			ChangeOrderDirection(DOWN)
-			fmt.Println("Order direction changed too DOWN")
+			//fmt.Println("Order direction changed too DOWN")
 			
 		case DOWN:
 			for floor:=currentFloor; floor>=0;floor--{
@@ -199,7 +206,7 @@ func CheckOtherFloors() int{
 				}
 			}
 			ChangeOrderDirection(UP)
-			fmt.Println("Order direction changed too UP")
+			//fmt.Println("Order direction changed too UP")
 	}
 	return -1
 }
@@ -213,8 +220,13 @@ func GetOrderDirection() int {
 }
 
 func PrintOrderDirection(){
-	fmt.Println("Order direction:")
-	fmt.Println(Direction)
+	dir := GetOrderDirection()
+	switch dir{
+	case 0:
+		fmt.Println("Order direction: UP")
+	case 1:
+		fmt.Println("Order direction: DOWN")
+	}
 }
 
 func FindDirection() int {

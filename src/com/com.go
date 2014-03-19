@@ -24,6 +24,8 @@ var peerCh = make(chan int)
 
 // Create sockets and start go routines
 func Run() {
+
+	done := make(chan bool)
 	
 	broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
 	listenAddr := ":12000"
@@ -39,21 +41,26 @@ func Run() {
 	fmt.Println("Sockets created successfully")
 
 	//fmt.Println("Channels created succesfully")
-	
-	testData := types.Data{"cost", []int{1, 0, 1}, [][]int{}, 2, types.CART_ID, time.Now()}
+	 
+	//testData := types.Data{"cost", []int{1, 0, 1}, [][]int{}, 2, types.CART_ID, time.Now()}
 
+	//go ChannelTester()
 	go CastData(bConn)
+	//fmt.Println("cast")
 	go ReceiveData(lConn)
+	//fmt.Println("receive")
 	go UpdatePeerMap(PeerMap)
+	//fmt.Println("UpdatePeerMap")
 
+	/*
 	for {
 
 		OutputCh <- testData
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(2 * time.Second)
 	}
-
-	//go ChannelTester()
+	*/
 	
+	<- done
 }
 
 
@@ -96,6 +103,7 @@ func UpdatePeerMap(p *types.PeerMap) {
 		p.Mu.Lock()
 		p.M[id] = time.Now()
 		p.Mu.Unlock()
+		//fmt.Println("peer")
 	}
 }
 
@@ -107,16 +115,19 @@ func ReceiveData(conn *net.UDPConn) {
 	for {
 		err := decoder.Decode(&inc)
 		
-		fmt.Println(inc)
+		
 		CheckError(err)
 		// update peermap
+
 		peerCh <- inc.ID // c1
 		
 		if inc.Head == "order" {
 			OrderCh <- inc.Order // c2
+			fmt.Println(inc.Order)
 		} else if inc.Head == "table" {
 			TableCh <- inc.Table // c3
 		} else if inc.Head == "cost" {
+
 			AuctionCh <- inc // c4
 		}
 		
@@ -134,7 +145,7 @@ func CastData(conn *net.UDPConn) {
 		data.T = time.Now() // Sets timestamp on outgoing data
 		err := encoder.Encode(data)
 		CheckError(err)
-		//fmt.Println(d)
+		fmt.Println(data)
 	}
 }
 
