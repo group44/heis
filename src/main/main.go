@@ -15,17 +15,17 @@ const CART_ID int = 1
 
 func main() {
 
-    done := make(chan bool)
+	done := make(chan bool)
 
-    //go order.Run()
-    go com.Run()
-    //go elevator.Run()
+	go order.Run()
+	go com.Run()
+	go elevator.Run()
 
-    /*
-    //Todo
-    go order.Run()
-    */
+	/*
+	   //Todo
+	   go order.Run()
+	*/
 
-    <- done
-    fmt.Println("End")
+	<-done
+	fmt.Println("End")
 }

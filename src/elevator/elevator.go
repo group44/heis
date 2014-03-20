@@ -19,12 +19,14 @@ const (
 )
 
 var (
-	currentFloorTest, state, nextstate int
+
+	state, nextstate int
 	SafetyFloorCh = make(chan bool)
 	DoorTimerStartCh = make(chan bool) 
 	DoorTimerDoneCh = make(chan bool)
 	ElevatorDirectionCh = make(chan string)
 	Temp bool
+
 )
 
 func Run(){
@@ -35,7 +37,8 @@ func Run(){
 	
     driver.ElevInit()
 	driver.ElevInitLights()
-    LightsInit()
+    //LightsInit()
+    go FloorLights()
     
     for (driver.ElevGetFloorSensorSignal() == -1){
         driver.ElevSetSpeed(-200)
@@ -136,44 +139,50 @@ func ControlStateMachine() {
 
 }
 
-
+/*
 func LightsInit(){
     //go order.SetLights(order.LocalOrders, order.C1)
-    go FloorLights()
 }
+*/
 
-func FloorLights(){
+func FloorLights() {
+
     for {
         time.Sleep(10*time.Millisecond)
         driver.ElevSetFloorIndicator(driver.ElevGetFloorSensorSignal())
     }
+
 }
 
 
 // Kjores i go routine, kan endre channel til string og legge til flere safety ting som nodstopp og obs her lett
-func Safety(){
+func Safety() {
+
 	for{
-		if (driver.ElevGetFloorSensorSignal() == 0 && !(order.CheckCurrentFloor())){
+		if driver.ElevGetFloorSensorSignal() == 0 && !order.CheckCurrentFloor() {
 			//skriv til channel
 			SafetyFloorCh <- true
-		} else if (driver.ElevGetFloorSensorSignal() == (types.N_FLOORS-1) && !(order.CheckCurrentFloor())){
+		} else if driver.ElevGetFloorSensorSignal() == (types.N_FLOORS-1) && !(order.CheckCurrentFloor()) {
 			//skriv til channel
 			SafetyFloorCh <- true
 		} else {
 			SafetyFloorCh <- false
 		}
 	}
+
 }
 
-func DoorTimer(){
-	for{
-	time.Sleep(10*time.Millisecond)
-	<- DoorTimerStartCh
-	fmt.Println("Timer started")
-	time.Sleep(3000*time.Millisecond)
+func DoorTimer() {
 
-	DoorTimerDoneCh <- true
-}
+	for {
+		time.Sleep(10*time.Millisecond)
+		<- DoorTimerStartCh
+		fmt.Println("Timer started")
+		time.Sleep(3000*time.Millisecond)
+
+		DoorTimerDoneCh <- true
+	}
+
 }
 
 
