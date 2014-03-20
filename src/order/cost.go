@@ -3,6 +3,7 @@ package order
 import (
 	"../com"
 	"../types"
+	"math"
 	//"math/rand"
 )
 
@@ -10,90 +11,86 @@ func TestDistribute() {
 
 }
 
-
 // Calculates own cost for an order
 
-func CalculateCost(lt []int, gt [][]int, state elevatorState, order []int) int {
+func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 	// Calculate and return an int describing your degree of availability
 	// 0 is best
-	
+
 	//Tar ikke hensyn til indre ordre. burde kanskje det, men tror det går greit uansett. litt usikker må teste litt.s
-	
-	cost := 666
+
+	cost := 0
 	elevatorDir := GetOrderDirection()
 	elevatorCurrentFloor := GetCurrentFloor()
-	orderFloor := waddafakka????
-	orderDir := fakkawadda????
-	
-	
-	floorDiff = 2*(absolute(elevatorCurrentFloor - orderFloor))  // må lages en absoulteverdi func
-	
-	
-	switch state { 
+	orderFloor := order[0]
+	orderDir := order[1]
+	wdp := 10 //wrong direction punishment
+	rdr := 3  //right direction reward
+	wfm := 2  //wrong floor multiplier.
+
+	floorDiff := wfm * (int(math.Abs(float64(elevatorCurrentFloor - orderFloor)))) // må lages en absoulteverdi func
+
+	switch state {
+	case UP:
+		switch elevatorDir {
 		case UP:
-			switch elevatorDir {
-				case UP:
-					if orderDir == DOWN{
-						cost = cost + 5
-					} else if orderDir == UP {
-						cost = cost - 1
-					}
-					cost = floorDiff + cost
-					break
-				case DOWN:
-					if orderDir == UP {
-						cost = cost + 3
-					}
-					cost = floorDiff + cost
-					break
+			if orderDir == DOWN {
+				cost = cost + wdp
+			} else if orderDir == UP {
+				cost = cost - rdr
 			}
+			cost = floorDiff + cost
 			break
-			
 		case DOWN:
-			switch elevatorDir {
-				case UP:
-					if orderDir == DOWN{
-						cost = cost + 3
-					} 
-					cost = floorDiff + cost
-					break
-				case DOWN:
-					if orderDir == UP {
-						cost = cost +5
-					} else if orderDir == DOWN {
-						cost = cost - 1
-					}
-					cost = floorDiff + cost
-					break
+			if orderDir == UP {
+				cost = cost + wdp
 			}
+			cost = floorDiff + cost
 			break
-		default:
-			switch elevatorDir {
-				case UP:
-					if orderDir == DOWN{
-						cost = cost + 5
-					} 
-					cost = floorDiff + cost
-					break
-				case DOWN:
-					if orderDir == UP {
-						cost = cost +5
-					}
-					cost = floorDiff + cost
-					break
+		}
+		break
+
+	case DOWN:
+		switch elevatorDir {
+		case UP:
+			if orderDir == DOWN {
+				cost = cost + wdp
 			}
+			cost = floorDiff + cost
 			break
+		case DOWN:
+			if orderDir == UP {
+				cost = cost + wdp
+			} else if orderDir == DOWN {
+				cost = cost - rdr
+			}
+			cost = floorDiff + cost
+			break
+		}
+		break
+	default:
+		switch elevatorDir {
+		case UP:
+			if orderDir == DOWN {
+				cost = cost + 5
+			}
+			cost = floorDiff + cost
+			break
+		case DOWN:
+			if orderDir == UP {
+				cost = cost + 5
+			}
+			cost = floorDiff + cost
+			break
+		}
+		break
 	}
-	 
-	
-	
-	if cost<0 {
+
+	if cost < 0 {
 		return 0
 	}
 	return cost
 }
-
-
 
 // Test function, gives random cost, goroutine
 /*
