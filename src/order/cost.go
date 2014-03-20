@@ -12,18 +12,23 @@ func TestDistribute() {
 }
 
 
-// Calculates own cost for an order
+// Calculates cost for an order, returns this as int
+// Calculate and return an int describing your degree of availability
+// Parameters?
 /*
-func CalculateCost(lt []int, gt [][]int, state elevatorState, order []int) int {
-	// Calculate and return an int describing your degree of availability
-	// 0 is best
-	
-	cost := 5
-	return cost
+func CalculateCost() int {
+	var currentFloor, dir, diff int
+	var order []int
+	for {
+		order = <- types.OrderCh
+		diff = currentFloor - order[0]
+
+	}
 }
 */
 
 // Test function, gives random cost, goroutine
+/*
 func CalculateCost() {
 	var cost int
 	order := make([]int, 3)
@@ -37,6 +42,7 @@ func CalculateCost() {
 	}
 
 }
+*/
 
 // Initiates an "auction" to determine which cart that should dispatch an order.
 // Bids in range 0-10, consider changing this - goroutine

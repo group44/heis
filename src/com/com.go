@@ -28,6 +28,7 @@ func Run() {
 	done := make(chan bool)
 	
 	broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
+	//broadcastAddr := "78.91.39.255:12000"
 	listenAddr := ":12000"
 
 	lAddr, err := net.ResolveUDPAddr("udp", listenAddr)
@@ -101,10 +102,13 @@ func UpdatePeerMap(p *types.PeerMap) {
 
 	for {
 		id = <- peerCh
-		p.Mu.Lock()
-		p.M[id] = time.Now()
-		p.Mu.Unlock()
-		//fmt.Println("peer")
+		if id >= 0 && id != types.CART_ID {
+			p.Mu.Lock()
+			p.M[id] = time.Now()
+			p.Mu.Unlock()
+			//fmt.Println("peer")
+		}
+		
 	}
 
 }
@@ -117,11 +121,15 @@ func ReceiveData(conn *net.UDPConn) {
 	
 	for {
 		err := decoder.Decode(&inc)
-			
 		CheckError(err)
 
+		if inc.ID == types.CART_ID {
+			continue
+		}
+		if inc.ID > 0 {
 		// update peermap
 		peerCh <- inc.ID // c1
+		}	
 		
 		if inc.Head == "order" {
 			OrderCh <- inc.Order // c2

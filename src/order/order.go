@@ -35,7 +35,6 @@ func Run() {
 	go UpdateInternalTable()
 	go UpdateLights()
 	go CheckExternalButtons()
-
 	go CalculateCost()
 	go Auction(GlobalOrders)
 
@@ -53,6 +52,12 @@ func CheckError(err string) {
 	if err != nil {
 		fmt.Println("")
 	}
+}
+*/
+
+/*
+func GetClosestElevator() {
+
 }
 */
 
@@ -262,6 +267,7 @@ func Redistribute() {
 // In separate goroutine
 func UpdateLights() {
 	var msg string
+
 	for {
 		time.Sleep(10 * time.Millisecond)
 		msg = <- UpdateLightCh
@@ -285,4 +291,14 @@ func UpdateLights() {
 		}
 
 	}
+
 }
+
+
+func Backup () {
+
+
+
+
+}
+
