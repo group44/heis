@@ -9,11 +9,14 @@ import (
 	//"../driver"
 	"../elevator"
 	//"time"
+	"runtime"
 )
 
 const CART_ID int = 1
 
 func main() {
+
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	done := make(chan bool)
 

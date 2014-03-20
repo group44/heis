@@ -27,15 +27,21 @@ var (
 
 func Run() {
 
+	done := make(chan bool)
+
 	GlobalOrders = types.NewGlobalTable()
 	InternalOrders = types.NewInternalTable()
+
 	Direction = UP
 
 	go UpdateInternalTable()
 	go UpdateLights()
 	go CheckExternalButtons()
-	//go CalculateCost()
+	go CalculateCost()
 	go Auction(GlobalOrders)
+	go UpdateGlobalTable()
+
+	<-done
 
 }
 
@@ -63,6 +69,7 @@ func GetClosestElevator() {
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne, denne i en go routine?
 func UpdateInternalTable() {
+
 	for {
 		time.Sleep(10 * time.Millisecond)
 		for i := range InternalOrders {
@@ -75,6 +82,16 @@ func UpdateInternalTable() {
 			}
 		}
 	}
+
+}
+
+func UpdateGlobalTable() {
+
+	for {
+		time.Sleep(10 * time.Millisecond)
+		GlobalOrders = <-com.TableCh
+	}
+
 }
 
 // INTERNAL maa erstattes, vurder assert
@@ -92,7 +109,7 @@ func ClearOrder() {
 		fmt.Println("Invalid dir number")
 	}
 
-	InternalOrders[floor], GlobalOrders[dir][floor] = 0, 0
+	InternalOrders[floor], GlobalOrders[floor][dir] = 0, 0
 	UpdateLightCh <- "internal"
 	UpdateLightCh <- "global"
 }
@@ -113,25 +130,37 @@ func CheckCurrentFloor() bool {
 // MonInternalOrdersors the external buttons on the carts own panel and sends a Data struct wInternalOrdersh order on
 // OutputCh if one is found. Runs in separate go routine.
 func CheckExternalButtons() {
-	data := types.Data{Head: "Order"}
+	data := types.Data{Head: "order"}
+
 	for {
 		time.Sleep(10 * time.Millisecond)
 		for i := 0; i < types.N_FLOORS; i++ {
 			if driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) != 0 {
 				data.Order = []int{i, 0}
 				com.OutputCh <- data
+
+				fmt.Println("Order created:")
+				fmt.Println(data)
+				fmt.Println("")
+
 				for driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) == 1 {
-					//time.Sleep(50*time.Millisecond)
+					time.Sleep(50 * time.Millisecond)
 				}
 			} else if driver.ElevGetButtonSignal(driver.BUTTON_CALL_DOWN, i) != 0 {
 				data.Order = []int{i, 1}
 				com.OutputCh <- data
+
+				fmt.Println("Order created:")
+				fmt.Println(data)
+				fmt.Println("")
+
 				for driver.ElevGetButtonSignal(driver.BUTTON_CALL_DOWN, i) == 1 {
-					//time.Sleep(50*time.Millisecond)
+					time.Sleep(50 * time.Millisecond)
 				}
 			}
 		}
 	}
+
 }
 
 // For enkel, returnerer bare den foerste ordren den finner. Kan gjoeres om til aa returnere flere verdier
