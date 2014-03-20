@@ -302,5 +302,50 @@ func UpdateLights() {
 }
 
 func Backup() {
+	hore := make([]byte, types.N_FLOORS)
+	for {
+		time.Sleep(100 * time.Millisecond)
 
+		WriteFile(hore, "backup.txt")
+		time.Sleep(100 * time.Millisecond)
+		ReadFile("backup.txt")
+
+	}
+}
+
+func ReadFile(filename string) {
+
+	//dat, err := ioutil.ReadFile(filename)
+
+	fmt.Println("reading: " + filename)
+	f, err := os.Open(filename)
+	b1 := make([]byte, 4)
+	hore := make([]byte, 4)
+	n1, err := f.Read(b1)
+	check(err)
+	fmt.Printf("%d bytes: %s\n", n1, b1)
+	for i := 0; i < 4; i++ {
+		hore[i] = b1[i]
+	}
+	fmt.Println(hore)
+
+}
+func WriteFile(hore []byte, filename string) {
+
+	//dat, err := ioutil.ReadFile(filename)
+
+	fmt.Println("write: " + filename)
+	fmt.Println(hore)
+	f, err := os.Open(filename)
+	check(err)
+
+	n1, err := f.Write(hore)
+	check(err)
+	fmt.Printf("%d bytes: %s\n", n1, hore)
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
