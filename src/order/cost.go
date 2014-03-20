@@ -1,16 +1,14 @@
 package order
 
 import (
-	"../types"
 	"../com"
-	"math/rand"
+	"../types"
+	//"math/rand"
 )
-
 
 func TestDistribute() {
 
 }
-
 
 // Calculates cost for an order, returns this as int
 // Calculate and return an int describing your degree of availability
@@ -53,9 +51,9 @@ func Auction(GlobalOrders types.GlobalTable) {
 	carts := make([]int, types.NUMBER_OF_CARTS)
 
 	for {
-		bid = <- com.AuctionCh
+		bid = <-com.AuctionCh
 		com.PeerMap.Mu.Lock()
-		for len(carts) < len (com.PeerMap.M) {
+		for len(carts) < len(com.PeerMap.M) {
 			carts[bid.ID] = bid.Cost
 			bid = <-com.AuctionCh
 		}
@@ -75,21 +73,19 @@ func Auction(GlobalOrders types.GlobalTable) {
 
 }
 
-
-// Claims and order and marks it by setting it's own CART_ID in the ID field of the 
+// Claims and order and marks it by setting it's own CART_ID in the ID field of the
 // global table. Should check if another ID is already set, and then not claim it, unless
 // the cart who has claimed it is dead.
 func Claim(data types.Data, table types.GlobalTable) { // order: [floor, dir, ID]
 	floor, dir := data.Order[0], data.Order[1]
-	if table[floor][dir + 1] != 0 {
-		table[floor][dir + 1] = types.CART_ID
-		outData := types.Data{Head:"table", Table:table}
+	if table[floor][dir+1] != 0 {
+		table[floor][dir+1] = types.CART_ID
+		outData := types.Data{Head: "table", Table: table}
 		com.OutputCh <- outData
 	}
 }
 
 // Removes a successfully dispatched order from the global table
 func ClearGlobal(data types.Data) {
-
 
 }
