@@ -16,18 +16,6 @@ func TestDistribute() {
 
 /*
 func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
-
-	cost := 666
-	elevatorDir := GetOrderDirection()
-	elevatorCurrentFloor := GetCurrentFloor()
-	orderFloor := waddafakka????
-	orderDir := fakkawadda????
-
-
-	floorDiff = 2*(absolute(elevatorCurrentFloor - orderFloor))  // må lages en absoulteverdi func
-
-
-	switch state {
 	cost := 0
 	elevatorDir := GetOrderDirection()
 	elevatorCurrentFloor := GetCurrentFloor()
@@ -101,15 +89,6 @@ func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 		}
 		break
 	default:
-		switch elevatorDir {
-		case UP:
-			if orderDir == DOWN {
-				cost = cost + 5
-
-
-
-	if cost<0 {
-	if cost < 0 {
 
 */
 
