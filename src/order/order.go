@@ -179,10 +179,8 @@ func CheckAllFloors() int {
 	return -1
 }
 
-//skal bli forbedret funksjon som sjekker de andre etasjene og returnerer den nermeste ordren
-func CheckOtherFloors() int {
+func GetCurrentFloor() int {
 	currentFloor := -1
-	dir := GetOrderDirection()
 	x, y := driver.IoReadBit(driver.FLOOR_IND1), driver.IoReadBit(driver.FLOOR_IND2)
 	switch x {
 	case 0:
@@ -192,7 +190,6 @@ func CheckOtherFloors() int {
 		case 1:
 			currentFloor = 1
 		}
-
 	case 1:
 		switch y {
 		case 0:
@@ -202,6 +199,13 @@ func CheckOtherFloors() int {
 		}
 	}
 
+	return currentFloor
+}
+
+//skal bli forbedret funksjon som sjekker de andre etasjene og returnerer den nermeste ordren
+func CheckOtherFloors() int {
+	currentFloor := GetCurrentFloor()
+	dir := GetOrderDirection()
 	switch dir {
 	case UP:
 		for floor := currentFloor; floor < types.N_FLOORS; floor++ {
@@ -213,7 +217,10 @@ func CheckOtherFloors() int {
 		}
 		for floor := currentFloor; floor >= 0; floor-- {
 			if floor != currentFloor {
-				if InternalOrders[floor] == 1 || GlobalOrders[floor][UP] == types.CART_ID {
+				if GlobalOrders[floor][UP] == types.CART_ID {
+					return floor
+				} else if InternalOrders[floor] == 1 {
+					ChangeOrderDirection(DOWN)
 					return floor
 				}
 			}
@@ -232,7 +239,10 @@ func CheckOtherFloors() int {
 
 		for floor := currentFloor; floor < types.N_FLOORS; floor++ {
 			if floor != currentFloor {
-				if InternalOrders[floor] == 1 || GlobalOrders[floor][DOWN] == types.CART_ID {
+				if GlobalOrders[floor][DOWN] == types.CART_ID {
+					return floor
+				} else if InternalOrders[floor] == 1 {
+					ChangeOrderDirection(UP)
 					return floor
 				}
 			}
@@ -254,9 +264,9 @@ func GetOrderDirection() int {
 func PrintOrderDirection() {
 	dir := GetOrderDirection()
 	switch dir {
-	case 0:
+	case UP:
 		fmt.Println("Order direction: UP")
-	case 1:
+	case DOWN:
 		fmt.Println("Order direction: DOWN")
 	}
 }
