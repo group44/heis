@@ -13,15 +13,88 @@ func TestDistribute() {
 
 
 // Calculates own cost for an order
-/*
+
 func CalculateCost(lt []int, gt [][]int, state elevatorState, order []int) int {
 	// Calculate and return an int describing your degree of availability
 	// 0 is best
 	
-	cost := 5
+	//Tar ikke hensyn til indre ordre. burde kanskje det, men tror det går greit uansett. litt usikker må teste litt.s
+	
+	cost := 666
+	elevatorDir := GetOrderDirection()
+	elevatorCurrentFloor := GetCurrentFloor()
+	orderFloor := waddafakka????
+	orderDir := fakkawadda????
+	
+	
+	floorDiff = 2*(absolute(elevatorCurrentFloor - orderFloor))  // må lages en absoulteverdi func
+	
+	
+	switch state { 
+		case UP:
+			switch elevatorDir {
+				case UP:
+					if orderDir == DOWN{
+						cost = cost + 5
+					} else if orderDir == UP {
+						cost = cost - 1
+					}
+					cost = floorDiff + cost
+					break
+				case DOWN:
+					if orderDir == UP {
+						cost = cost + 3
+					}
+					cost = floorDiff + cost
+					break
+			}
+			break
+			
+		case DOWN:
+			switch elevatorDir {
+				case UP:
+					if orderDir == DOWN{
+						cost = cost + 3
+					} 
+					cost = floorDiff + cost
+					break
+				case DOWN:
+					if orderDir == UP {
+						cost = cost +5
+					} else if orderDir == DOWN {
+						cost = cost - 1
+					}
+					cost = floorDiff + cost
+					break
+			}
+			break
+		default:
+			switch elevatorDir {
+				case UP:
+					if orderDir == DOWN{
+						cost = cost + 5
+					} 
+					cost = floorDiff + cost
+					break
+				case DOWN:
+					if orderDir == UP {
+						cost = cost +5
+					}
+					cost = floorDiff + cost
+					break
+			}
+			break
+	}
+	 
+	
+	
+	if cost<0 {
+		return 0
+	}
 	return cost
 }
-*/
+
+
 
 // Test function, gives random cost, goroutine
 func CalculateCost() {

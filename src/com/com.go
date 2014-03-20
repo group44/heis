@@ -2,13 +2,13 @@ package com
 
 import (
 	"../types"
-	"net"
 	"fmt"
+	"net"
 	//"sync"
-	"time"
+	//"../order"
 	"encoding/gob"
 	"os"
-	//"../order"
+	"time"
 )
 
 var PeerMap = NewPeerMap()
@@ -18,7 +18,7 @@ var OutputCh = make(chan types.Data, 5)
 var OrderCh = make(chan []int)
 var TableCh = make(chan [][]int)
 var AuctionCh = make(chan types.Data)
-	
+
 // Local channels
 var peerCh = make(chan int)
 
@@ -26,7 +26,7 @@ var peerCh = make(chan int)
 func Run() {
 
 	done := make(chan bool)
-	
+
 	broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
 	listenAddr := ":12000"
 
@@ -37,11 +37,11 @@ func Run() {
 	lConn, err := net.ListenUDP("udp", lAddr)
 	bConn, err := net.DialUDP("udp", nil, bAddr)
 	CheckError(err)
-	
+
 	fmt.Println("Sockets created successfully")
 
 	//fmt.Println("Channels created succesfully")
-	 
+
 	//testData := types.Data{"cost", []int{1, 0, 1}, [][]int{}, 2, types.CART_ID, time.Now()}
 
 	//go ChannelTester()
@@ -53,16 +53,15 @@ func Run() {
 	//fmt.Println("UpdatePeerMap")
 
 	/*
-	for {
+		for {
 
-		OutputCh <- testData
-		time.Sleep(2 * time.Second)
-	}
+			OutputCh <- testData
+			time.Sleep(2 * time.Second)
+		}
 	*/
-	
-	<- done
-}
 
+	<-done
+}
 
 func CheckError(err error) {
 	if err != nil {
@@ -93,14 +92,13 @@ func CheckPeerLife(p types.PeerMap, id int) bool {
 	return false
 }
 
-
 // Updates peermap and sets discovery time from conn input
 // New version using ID instead of IP
 func UpdatePeerMap(p *types.PeerMap) {
 	var id int
 
 	for {
-		id = <- peerCh
+		id = <-peerCh
 		p.Mu.Lock()
 		p.M[id] = time.Now()
 		p.Mu.Unlock()
@@ -109,52 +107,49 @@ func UpdatePeerMap(p *types.PeerMap) {
 
 }
 
-
 // Listens and receives from connection in seperate go-routine
 func ReceiveData(conn *net.UDPConn) {
 	var inc types.Data
 	decoder := gob.NewDecoder(conn)
-	
+
 	for {
 		err := decoder.Decode(&inc)
-			
+
 		CheckError(err)
 
 		// update peermap
 		peerCh <- inc.ID // c1
-		
+
 		if inc.Head == "order" {
 			OrderCh <- inc.Order // c2
 			fmt.Println(inc.Order)
 		} else if inc.Head == "table" {
-			order.Globalorders = inc.Table
+			order.GlobalOrders = inc.Table
 			TableCh <- inc.Table // c3 - is this channel needed?
 		} else if inc.Head == "cost" {
 
 			AuctionCh <- inc // c4
 		}
-		
+
 		//fmt.Println(inc)
 	}
 
 }
-
 
 func CastData(conn *net.UDPConn) {
 	var data types.Data
 	encoder := gob.NewEncoder(conn)
 
 	for {
-		data = <- OutputCh
+		data = <-OutputCh
 		data.ID = types.CART_ID
 		data.T = time.Now() // Sets timestamp on outgoing data
 		err := encoder.Encode(data)
 		CheckError(err)
 		fmt.Println(data)
 	}
-	
-}
 
+}
 
 func ChannelTester(c1 chan int, c2 chan []int, c3 chan [][]int, c4 chan int) {
 
