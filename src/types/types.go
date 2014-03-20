@@ -1,56 +1,50 @@
 package types
 
 import (
-    "time"
-    "sync"
+	"sync"
+	"time"
 )
 
-
 const (
-	CART_ID = 1
-	N_FLOORS = 4
+	CART_ID   = 1
+	N_FLOORS  = 4
 	N_BUTTONS = 4
-	NUMBER_OF_CARTS = 2
-	
+
+	NUMBER_OF_CARTS = 1
+
 	// Global timeout const
 	TIMEOUT = 1 * time.Second
 )
 
-var (
-
-)
-
+var ()
 
 type (
-
-	GlobalTable [][]int
+	GlobalTable   [][]int
 	InternalTable []int
 
-    ElevButtonTypeT int
-    
-    // Map for storing addresses of peers in group
-    PeerMap struct {
-	    Mu sync.Mutex
-	    M map[int]time.Time
-    }
+	ElevButtonTypeT int
 
-    // Struct for sending data over network
-    Data struct {
-	    Head string
-	    Order []int
-	    Table [][]int
-	    Cost int
-	    ID int
-	    T time.Time
-    }
+	// Map for storing addresses of peers in group
+	PeerMap struct {
+		Mu sync.Mutex
+		M  map[int]time.Time
+	}
 
+	// Struct for sending data over network
+	Data struct {
+		Head  string
+		Order []int
+		Table [][]int
+		Cost  int
+		ID    int
+		T     time.Time
+	}
 )
-
 
 func NewGlobalTable() [][]int {
 	t := make([][]int, N_FLOORS)
 	for i := range t {
-		t[i] = make([]int, 4)
+		t[i] = make([]int, 2)
 		for j := range t[i] {
 			t[i][j] = 0
 		}
@@ -62,5 +56,3 @@ func NewInternalTable() []int {
 	t := make([]int, N_FLOORS)
 	return t
 }
-
-

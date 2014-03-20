@@ -16,7 +16,7 @@ var PeerMap = NewPeerMap()
 // Global channels
 var OutputCh = make(chan types.Data, 5)
 var OrderCh = make(chan []int)
-var TableCh = make(chan [][]int)
+var TableCh = make(chan types.GlobalTable)
 var AuctionCh = make(chan types.Data)
 
 // Local channels
@@ -52,14 +52,6 @@ func Run() {
 	//fmt.Println("receive")
 	go UpdatePeerMap(PeerMap)
 	//fmt.Println("UpdatePeerMap")
-
-	/*
-		for {
-
-			OutputCh <- testData
-			time.Sleep(2 * time.Second)
-		}
-	*/
 
 	<-done
 }
@@ -99,6 +91,7 @@ func UpdatePeerMap(p *types.PeerMap) {
 	var id int
 
 	for {
+		time.Sleep(10 * time.Millisecond)
 		id = <-peerCh
 
 		p.Mu.Lock()
@@ -115,26 +108,49 @@ func ReceiveData(conn *net.UDPConn) {
 	decoder := gob.NewDecoder(conn)
 
 	for {
+		time.Sleep(10 * time.Millisecond)
 		err := decoder.Decode(&inc)
-
 		CheckError(err)
+		//fmt.Println(inc)
 
-		if inc.ID == types.CART_ID {
-			continue
-		}
+		/*
+			if inc.ID == types.CART_ID {
+				continue
+			}
+		*/
+
 		if inc.ID > 0 {
 			// update peermap
 			peerCh <- inc.ID // c1
 		}
 
-		if inc.Head == "order" {
-			OrderCh <- inc.Order // c2
-			fmt.Println(inc.Order)
-		} else if inc.Head == "table" {
-			TableCh <- inc.Table // c3 - is this channel needed?
-		} else if inc.Head == "cost" {
+		switch inc.Head {
 
-			AuctionCh <- inc // c4
+		case "order":
+			OrderCh <- inc.Order
+
+			fmt.Println("Order received:")
+			fmt.Println(inc.Order)
+			fmt.Println("")
+
+		case "table":
+			TableCh <- inc.Table
+
+			fmt.Println("Table received and updated")
+			fmt.Println(inc.Table)
+			fmt.Println("")
+
+		case "cost":
+			AuctionCh <- inc
+
+			fmt.Println("Cost received:")
+			fmt.Println(inc)
+			fmt.Println("")
+
+		default:
+
+			fmt.Println("Default case entered")
+
 		}
 
 		//fmt.Println(inc)
@@ -143,8 +159,11 @@ func ReceiveData(conn *net.UDPConn) {
 }
 
 func CastData(conn *net.UDPConn) {
-	var data types.Data
 	encoder := gob.NewEncoder(conn)
+	data := types.Data{Head: "table", Table: types.NewGlobalTable()}
+	err := encoder.Encode(data)
+	CheckError(err)
+	fmt.Println(data)
 
 	for {
 		data = <-OutputCh
@@ -152,7 +171,12 @@ func CastData(conn *net.UDPConn) {
 		data.T = time.Now() // Sets timestamp on outgoing data
 		err := encoder.Encode(data)
 		CheckError(err)
+
+		fmt.Println("Data casted:")
 		fmt.Println(data)
+		fmt.Println("")
+
+		time.Sleep(10 * time.Millisecond)
 	}
 
 }
