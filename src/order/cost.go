@@ -140,15 +140,12 @@ func Auction(GlobalOrders types.GlobalTable) {
 	var maxCost = 10
 	var bid types.Data
 	carts := make([]int, types.NUMBER_OF_CARTS)
-	fmt.Println(carts)
 
 	for {
+
 		time.Sleep(10 * time.Millisecond)
 		bid = <-com.AuctionCh
 		com.PeerMap.Mu.Lock()
-
-		fmt.Println(len(carts))
-		fmt.Println(len(com.PeerMap.M))
 
 		/*
 			for len(carts) < len(com.PeerMap.M)+1 {
@@ -176,8 +173,8 @@ func Auction(GlobalOrders types.GlobalTable) {
 			Claim(bid.Order, GlobalOrders)
 
 		}
-	}
 
+	}
 }
 
 // Claims and order and marks it by setting it's own CART_ID in the ID field of the

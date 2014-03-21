@@ -19,12 +19,16 @@ const (
 )
 
 var (
-	state, nextstate    int
+
+	// Global channels
+	state               int
+	nextstate           int
 	SafetyFloorCh       = make(chan bool)
-	DoorTimerStartCh    = make(chan bool)
-	DoorTimerDoneCh     = make(chan bool)
 	ElevatorDirectionCh = make(chan string)
-	Temp                bool
+
+	// Local channels
+	doorTimerCh = make(chan bool)
+	Temp        bool
 )
 
 func Run() {
@@ -47,7 +51,7 @@ func Run() {
 	//go Safety()
 	//Door timer go routine
 	//Selveste statemaskinen
-	go DoorTimer()
+	go SetDoorTimer()
 
 	ControlStateMachine()
 	//order.UpdateLocalTable(order.LocalOrders, order.C1)
@@ -65,6 +69,7 @@ func ControlStateMachine() {
 		case IDLE:
 			if order.CheckCurrentFloor() {
 				nextstate = OPEN
+				fmt.Println("opentest")
 			} else if order.FindDirection() == 1 {
 				nextstate = DOWN
 			} else if order.FindDirection() == 0 {
@@ -76,10 +81,9 @@ func ControlStateMachine() {
 			// if true
 			// timer ferdig
 			//in the ghetto timer
-			if <-DoorTimerDoneCh {
-				fmt.Println("Timer done")
-				nextstate = IDLE
-			}
+			<-doorTimerCh
+			fmt.Println("Timer done")
+			nextstate = IDLE
 			break
 
 		case UP:
@@ -104,9 +108,11 @@ func ControlStateMachine() {
 		}
 
 		if state != nextstate {
+
 			fmt.Println(state, nextstate)
 			order.PrintTable()
 			order.PrintOrderDirection()
+
 			switch nextstate {
 
 			case IDLE:
@@ -119,7 +125,7 @@ func ControlStateMachine() {
 				driver.ElevSetDoorOpenLamp(ON)
 				order.ClearOrder()
 				//start timer
-				DoorTimerStartCh <- true
+				doorTimerCh <- true
 				break
 
 			case UP:
@@ -140,12 +146,6 @@ func ControlStateMachine() {
 		state = nextstate
 	}
 }
-
-/*
-func LightsInit(){
-    //go order.SetLights(order.LocalOrders, order.C1)
-}
-*/
 
 func FloorLights() {
 
@@ -173,16 +173,16 @@ func Safety() {
 
 }
 
-func DoorTimer() {
+func SetDoorTimer() {
 
 	for {
-		<-DoorTimerStartCh
+		<-doorTimerCh
 		time.Sleep(10 * time.Millisecond)
 
 		fmt.Println("Timer started")
 		time.Sleep(3000 * time.Millisecond)
 
-		DoorTimerDoneCh <- true
+		doorTimerCh <- true
 	}
 
 }

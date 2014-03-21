@@ -117,12 +117,17 @@ func ClearOrder() {
 // Vurder assert, tar ikke hensyn til retning. Sjekker kun om det er ordre den skal ta selv
 func CheckCurrentFloor() bool {
 	currentFloor := driver.ElevGetFloorSensorSignal()
-	if currentFloor < 0 || currentFloor >= types.N_FLOORS && currentFloor != -1 {
-		// Assert here
-		//fmt.Println("Invalid floor number troroororoo")
-	}
+	dir := GetOrderDirection()
+
+	/*
+		if currentFloor < 0 || currentFloor >= types.N_FLOORS && currentFloor != -1 {
+			// Assert here
+			//fmt.Println("Invalid floor number troroororoo")
+		}
+	*/
 	if currentFloor != -1 {
-		return InternalOrders[currentFloor] == 1 || GlobalOrders[currentFloor][UP] == types.CART_ID || GlobalOrders[currentFloor][DOWN] == types.CART_ID
+		//fmt.Println(GlobalOrders[currentFloor][dir] == types.CART_ID)
+		return InternalOrders[currentFloor] == 1 || GlobalOrders[currentFloor][dir] == types.CART_ID //|| GlobalOrders[currentFloor][DOWN] == types.CART_ID
 	}
 	return false
 }
@@ -133,8 +138,9 @@ func CheckExternalButtons() {
 	data := types.Data{Head: "order"}
 
 	for {
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		for i := 0; i < types.N_FLOORS; i++ {
+			time.Sleep(100 * time.Millisecond)
 			if driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) != 0 {
 				data.Order = []int{i, 0}
 				com.OutputCh <- data
@@ -310,20 +316,23 @@ func UpdateLights() {
 
 		switch msg {
 		case "internal":
-			fmt.Println("Internal Lights updated")
 			for i := range InternalOrders {
 				driver.ElevSetLights(i, 2, InternalOrders[i])
 			}
+			fmt.Println("Internal Lights updated")
 
 		case "global":
-			fmt.Println("Global Lights updated")
-			for j, k := 0, 0; j < types.N_FLOORS && k < 2; j, k = j+1, k+1 {
-				if GlobalOrders[j][k] != 0 {
-					driver.ElevSetLights(j, k, 1)
-				} else {
-					driver.ElevSetLights(j, k, 0)
+
+			for j := 0; j < types.N_FLOORS; j++ {
+				for k := 0; k < 2; k++ {
+					if GlobalOrders[j][k] != 0 {
+						driver.ElevSetLights(j, k, 1)
+					} else {
+						driver.ElevSetLights(j, k, 0)
+					}
 				}
 			}
+			fmt.Println("Global Lights updated")
 		}
 
 	}
