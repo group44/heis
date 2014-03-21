@@ -12,9 +12,7 @@ func TestDistribute() {
 
 }
 
-// Calculates own cost for an order
-
-/*
+// Calculates own cost for an order får ikke inn state, så den må fjernes hvis vi ikke finner ut av det.. 
 func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 	cost := 0
 	elevatorDir := GetOrderDirection()
@@ -25,7 +23,7 @@ func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 	rdr := 3  //right direction reward
 	wfm := 2  //wrong floor multiplier.
 
-	floorDiff := wfm * (int(math.Abs(float64(elevatorCurrentFloor - orderFloor)))) // må lages en absoulteverdi func
+	floorDiff := wfm * (int(math.Abs(float64(elevatorCurrentFloor - orderFloor))))
 
 	switch state {
 	case UP:
@@ -49,48 +47,49 @@ func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 
 	case DOWN:
 		switch elevatorDir {
-
+		case UP:
+				if orderDir == DOWN{
+				cost = cost + 3
+			}
+			cost = floorDiff + cost
+			break
 		case DOWN:
-			switch elevatorDir {
-				case UP:
-					if orderDir == DOWN{
-						cost = cost + 3
-					}
-					cost = floorDiff + cost
-					break
-				case DOWN:
-					if orderDir == UP {
-						cost = cost +5
-					} else if orderDir == DOWN {
-						cost = cost - 1
-					}
-					cost = floorDiff + cost
-					break
-
+			if orderDir == UP {
+				cost = cost +5
+			} else if orderDir == DOWN {
+				cost = cost - 1
+			}
+			cost = floorDiff + cost
+			break
 		case DOWN:
 			if orderDir == UP {
 				cost = cost + wdp
 			} else if orderDir == DOWN {
 				cost = cost - rdr
-		default:
-			switch elevatorDir {
-				case UP:
-					if orderDir == DOWN{
-						cost = cost + 5
-					}
-					cost = floorDiff + cost
-					break
-				case DOWN:
-					if orderDir == UP {
-						cost = cost +5
-					}
-					cost = floorDiff + cost
-					break
-		}
-		break
+			}
+			break
 	default:
+		switch elevatorDir {
+		case UP:
+			if orderDir == DOWN{
+				cost = cost + 5
+			}
+			cost = floorDiff + cost
+			break
+		case DOWN:
+			if orderDir == UP {
+				cost = cost +5
+			}
+			cost = floorDiff + cost
+			break
+		}
+	break
+	}
+	}
+	return cost
+}
 
-*/
+
 
 // Test function, gives random cost, goroutine
 
@@ -121,13 +120,10 @@ func Auction(GlobalOrders types.GlobalTable) {
 	carts := make([]int, types.NUMBER_OF_CARTS)
 
 	for {
-		
+
 		time.Sleep(10 * time.Millisecond)
 		bid = <-com.AuctionCh
-		fmt.Println("auction")
-		
-		
-		//com.PeerMap.Mu.Lock()
+		com.PeerMap.Mu.Lock()
 
 		/*
 			for len(carts) < len(com.PeerMap.M)+1 {
@@ -140,7 +136,7 @@ func Auction(GlobalOrders types.GlobalTable) {
 
 		carts[bid.ID-1] = bid.Cost
 
-		//com.PeerMap.Mu.Unlock()
+		com.PeerMap.Mu.Unlock()
 
 		// This may cause two or more elevators to claim the same order (if they have equal cost
 		for i := 0; i < len(carts); i++ {
@@ -163,12 +159,11 @@ func Auction(GlobalOrders types.GlobalTable) {
 // global table. Should check if another ID is already set, and then not claim it, unless
 // the cart who has claimed it is dead.
 func Claim(order []int, table types.GlobalTable) { // order: [floor, dir, ID]
-	fmt.Println(table)
 	floor, dir := order[0], order[1]
 	if table[floor][dir] == 0 {
 		table[floor][dir] = types.CART_ID
 		outData := types.Data{Head: "table", Table: table}
-		//com.TableCh <- table
+		com.TableCh <- table
 		com.OutputCh <- outData
 
 		fmt.Println("Table casted:")

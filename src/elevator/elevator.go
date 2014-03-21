@@ -16,6 +16,7 @@ const (
 	
 	ON  = 1
 	OFF = 0
+	SPEED = 300
 )
 
 var (
@@ -25,7 +26,8 @@ var (
 	ElevatorDirectionCh = make(chan string)
 
 	// Local channels
-	doorTimerCh = make(chan bool)
+	doorTimerStartCh = make(chan bool)
+	doorTimerDoneCh = make(chan bool)
 	idleCh = make(chan bool)
 	openCh = make(chan bool)
 	downCh = make(chan bool)
@@ -44,7 +46,7 @@ func Run() {
 	go SetDoorTimer()
 
 	for driver.ElevGetFloorSensorSignal() == -1 {
-		driver.ElevSetSpeed(-200)
+		driver.ElevSetSpeed(-SPEED)
 	}
 	driver.ElevSetSpeed(0)
 	
@@ -86,14 +88,20 @@ func Idle() {
 		
 		//fmt.Println(order.CheckCurrentFloor())
 		fmt.Println(order.FindDirection())
-		if order.CheckCurrentFloor() {
-			fmt.Println("opentest")
-			openCh <- true
+		for { //Her går den helt til den oppnår betingelsene for en ny state
+			if order.CheckCurrentFloor() {
+				fmt.Println("opentest")
+				openCh <- true
+				break
 			
-		} else if order.FindDirection() == 1 {// || order.FindDirection() == -1 {
-			downCh <- true
-		} else if order.FindDirection() == 0 {
-			upCh <- true
+			} else if order.FindDirection() == 1 {// || order.FindDirection() == -1 {
+				downCh <- true
+				break
+			} else if order.FindDirection() == 0 {
+				upCh <- true
+				break
+			}
+			time.Sleep(100*time.Millisecond)
 		}
 		fmt.Println("IDLE END")
 
@@ -109,8 +117,8 @@ func Open() {
 		driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen			
 		order.ClearOrder()
 
-		doorTimerCh <- true
-		<-doorTimerCh
+		doorTimerStartCh <- true
+		<-doorTimerDoneCh
 		idleCh <- true
 
 	}
@@ -122,7 +130,7 @@ func Down() {
 		<- downCh
 		fmt.Println("ENTERED DOWN")
 
-		driver.ElevSetSpeed(-300) // verdi?
+		driver.ElevSetSpeed(-SPEED) // verdi?
 
 		for !order.CheckCurrentFloor() {
 			time.Sleep(100 * time.Millisecond)
@@ -139,7 +147,7 @@ func Up() {
 		<- upCh
 		fmt.Println("ENTERED UP")
 
-		driver.ElevSetSpeed(300) // verdi?
+		driver.ElevSetSpeed(SPEED) // verdi?
 
 		for !order.CheckCurrentFloor() {
 			time.Sleep(100 * time.Millisecond)
@@ -265,13 +273,12 @@ func Safety() {
 			SafetyFloorCh <- false
 		}
 	}
-
 }
 
 func SetDoorTimer() {
 
 	for {
-		<-doorTimerCh
+		<-doorTimerStartCh
 
 		driver.ElevSetDoorOpenLamp(ON)
 		fmt.Println("Timer started")
@@ -279,7 +286,7 @@ func SetDoorTimer() {
 		fmt.Println("Timer done")
 		driver.ElevSetDoorOpenLamp(OFF)
 
-		doorTimerCh <- true
+		doorTimerDoneCh <- true
 	}
 
 }

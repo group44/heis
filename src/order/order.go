@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"strings"
+    "strconv"
 )
 
 const (
@@ -31,7 +33,7 @@ func Run() {
 
 	GlobalOrders = types.NewGlobalTable()
 	InternalOrders = types.NewInternalTable()
-
+	ReadFile()
 	Direction = UP
 
 	go UpdateInternalTable()
@@ -88,7 +90,7 @@ func UpdateInternalTable() {
 func UpdateGlobalTable() {
 
 	for {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		GlobalOrders = <-com.TableCh
 	}
 
@@ -115,19 +117,31 @@ func ClearOrder() {
 }
 
 // Vurder assert, tar ikke hensyn til retning. Sjekker kun om det er ordre den skal ta selv
+/*func CheckCurrentFloor() bool {
+	currentFloor := driver.ElevGetFloorSensorSignal()
+	dir := GetOrderDirection()
+
+	if currentFloor != -1 {
+		//fmt.Println(GlobalOrders[currentFloor][dir] == types.CART_ID)
+		return InternalOrders[currentFloor] == 1 || GlobalOrders[currentFloor][dir] == types.CART_ID //|| GlobalOrders[currentFloor][DOWN] == types.CART_ID
+	}
+	return false
+}*/
+
+// ny funksjon, kan ikke skjønne at denne ikke skal fungere
 func CheckCurrentFloor() bool {
 	currentFloor := driver.ElevGetFloorSensorSignal()
 	dir := GetOrderDirection()
 
-	/*
-		if currentFloor < 0 || currentFloor >= types.N_FLOORS && currentFloor != -1 {
-			// Assert here
-			//fmt.Println("Invalid floor number troroororoo")
+	if currentFloor == -1 {
+		return false
+	}
+	if currentFloor != -1 && currentFloor < types.N_FLOORS {
+		if InternalOrders[currentFloor] == 1 {
+			return true
+		} else if GlobalOrders[currentFloor][dir] == types.CART_ID {
+			return true
 		}
-	*/
-	if currentFloor != -1 {
-		//fmt.Println(GlobalOrders[currentFloor][dir] == types.CART_ID)
-		return InternalOrders[currentFloor] == 1 || GlobalOrders[currentFloor][dir] == types.CART_ID //|| GlobalOrders[currentFloor][DOWN] == types.CART_ID
 	}
 	return false
 }
@@ -138,9 +152,9 @@ func CheckExternalButtons() {
 	data := types.Data{Head: "order"}
 
 	for {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		for i := 0; i < types.N_FLOORS; i++ {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 			if driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) != 0 {
 				data.Order = []int{i, 0}
 				com.OutputCh <- data
@@ -170,7 +184,7 @@ func CheckExternalButtons() {
 }
 
 // For enkel, returnerer bare den foerste ordren den finner. Kan gjoeres om til aa returnere flere verdier
-func CheckAllFloors() int {
+/*func CheckAllFloors() int {
 	//Checks internal orders first
 	currentFloor := driver.ElevGetFloorSensorSignal()
 
@@ -184,6 +198,7 @@ func CheckAllFloors() int {
 
 	return -1
 }
+*/
 
 func GetCurrentFloor() int {
 	currentFloor := -1
@@ -317,7 +332,7 @@ func UpdateLights() {
 		switch msg {
 		case "internal":
 			for i := range InternalOrders {
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(10 * time.Millisecond)
 				driver.ElevSetLights(i, 2, InternalOrders[i])
 			}
 			fmt.Println("Internal Lights updated")
@@ -326,7 +341,7 @@ func UpdateLights() {
 
 			for j := 0; j < types.N_FLOORS; j++ {
 				for k := 0; k < 2; k++ {
-					time.Sleep(50 * time.Millisecond)
+					time.Sleep(10 * time.Millisecond)
 					if GlobalOrders[j][k] != 0 {
 						driver.ElevSetLights(j, k, 1)
 					} else {
@@ -342,47 +357,29 @@ func UpdateLights() {
 }
 
 func Backup() {
-	hore := make([]byte, types.N_FLOORS)
 	for {
-		time.Sleep(100 * time.Millisecond)
-
-		WriteFile(hore, "backup.txt")
-		time.Sleep(100 * time.Millisecond)
-		ReadFile("backup.txt")
-
+		time.Sleep(200 * time.Millisecond)
+		WriteFile()
 	}
 }
 
-func ReadFile(filename string) {
-
-	//dat, err := ioutil.ReadFile(filename)
-
-	fmt.Println("reading: " + filename)
-	f, err := os.Open(filename)
-	b1 := make([]byte, 4)
-	hore := make([]byte, 4)
-	n1, err := f.Read(b1)
-	check(err)
-	fmt.Printf("%d bytes: %s\n", n1, b1)
-	for i := 0; i < 4; i++ {
-		hore[i] = b1[i]
-	}
-	fmt.Println(hore)
-
+func ReadFile() {
+	b, err := ioutil.ReadFile("backup.txt")
+    if err != nil { panic(err) }
+    internal := strings.Split(string(b),"")
+    for i:=0;i<types.N_FLOORS;i++{
+    	InternalOrders[i],_ = strconv.Atoi(internal[i])
+    }
+    //InternalOrders[1],_ = strconv.Atoi(internal[1])
+    //InternalOrders[2],_ = strconv.Atoi(internal[2])
+    //InternalOrders[3],_ = strconv.Atoi(internal[3])
 }
 
-func WriteFile(hore []byte, filename string) {
-
-	//dat, err := ioutil.ReadFile(filename)
-
-	fmt.Println("write: " + filename)
-	fmt.Println(hore)
-	f, err := os.Open(filename)
-	check(err)
-
-	n1, err := f.Write(hore)
-	check(err)
-	fmt.Printf("%d bytes: %s\n", n1, hore)
+// i denne må det leges til flere hvis heisen utvides til fler etasjer
+func WriteFile() {
+	msg := strconv.Itoa(InternalOrders[0])+strconv.Itoa(InternalOrders[1])+strconv.Itoa(InternalOrders[2])+strconv.Itoa(InternalOrders[3])
+    buf := []byte(msg)
+    _ = ioutil.WriteFile("backup.txt", buf, 0644)
 }
 
 func check(e error) {
