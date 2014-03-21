@@ -311,12 +311,13 @@ func UpdateLights() {
 	var msg string
 
 	for {
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		msg = <-UpdateLightCh
 
 		switch msg {
 		case "internal":
 			for i := range InternalOrders {
+				time.Sleep(10 * time.Millisecond)
 				driver.ElevSetLights(i, 2, InternalOrders[i])
 			}
 			fmt.Println("Internal Lights updated")
@@ -325,6 +326,7 @@ func UpdateLights() {
 
 			for j := 0; j < types.N_FLOORS; j++ {
 				for k := 0; k < 2; k++ {
+					time.Sleep(10 * time.Millisecond)
 					if GlobalOrders[j][k] != 0 {
 						driver.ElevSetLights(j, k, 1)
 					} else {
@@ -368,6 +370,7 @@ func ReadFile(filename string) {
 	fmt.Println(hore)
 
 }
+
 func WriteFile(hore []byte, filename string) {
 
 	//dat, err := ioutil.ReadFile(filename)

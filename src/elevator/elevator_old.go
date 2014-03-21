@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	UP   = 0
-	DOWN = 1
 	IDLE = 2
 	OPEN = 3
-	
+	UP   = 0
+	DOWN = 1
+
 	ON  = 1
 	OFF = 0
 )
@@ -21,23 +21,24 @@ const (
 var (
 
 	// Global channels
+	state               int
+	nextstate           int
 	SafetyFloorCh       = make(chan bool)
 	ElevatorDirectionCh = make(chan string)
 
 	// Local channels
 	doorTimerCh = make(chan bool)
-	idleCh = make(chan bool)
-	openCH = make(chan bool)
-	downCh = make(chan bool)
-	upCh = make(chan bool)
-
 	Temp        bool
 )
 
 func Run() {
 
 	// Initialization
+	state = IDLE
+	nextstate = IDLE
+
 	driver.ElevInit()
+	driver.ElevInitLights()
 
 	go FloorLights()
 	go SetDoorTimer()
@@ -45,97 +46,18 @@ func Run() {
 	for driver.ElevGetFloorSensorSignal() == -1 {
 		driver.ElevSetSpeed(-200)
 	}
-	driver.ElevSetSpeed(0)
-
-	idleCh <- true
-	go Idle()
-	go Open()
-	go Down()
-	go Up()
-
-	}
+	//driver.ElevSetSpeed(0)
 
 	//Safety go routine
 	//go Safety()
 	//Door timer go routine
 	//Selveste statemaskinen
 
-	//ControlStateMachine()
+	ControlStateMachine()
 	//order.UpdateLocalTable(order.LocalOrders, order.C1)
 
 }
 
-func Idle() {
-	for {
-
-		<- idleCh
-
-		driver.ElevSetDoorOpenLamp(OFF)
-		driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
-
-		if order.CheckCurrentFloor() {
-			openCh <- true
-			fmt.Println("opentest")
-		} else if order.FindDirection() == 1 {
-			downCh <- true
-		} else if order.FindDirection() == 0 {
-			upCh <- true
-		}
-
-	}	
-}
-
-func Open() {
-	for {
-
-		<- openCh
-
-		driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen			
-		order.ClearOrder()
-
-		doorTimerCh <- true
-		<-doorTimerCh
-		idleCh <- true
-
-	}
-}
-
-func Down() {
-	for {
-
-		<- downCh
-
-		driver.ElevSetSpeed(-300) // verdi?
-
-		for !order.CheckCurrentFloor() {
-			time.Sleep(100 * time.Millisecond)
-		}
-		
-		openCh <- true
-
-	}
-}
-
-func Up() {
-	for {
-
-		<- upCh
-
-		driver.ElevSetSpeed(300) // verdi?
-
-		for !order.CheckCurrentFloor() {
-			time.Sleep(100 * time.Millisecond)
-		}
-		
-		openCh <- true
-
-	}
-
-}
-
-
-// Old state machine
-/*
 func ControlStateMachine() {
 
 	for {
@@ -222,7 +144,6 @@ func ControlStateMachine() {
 		state = nextstate
 	}
 }
-*/
 
 func FloorLights() {
 

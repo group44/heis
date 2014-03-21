@@ -61,10 +61,13 @@ func ElevInit() int {
 	ElevSetStopLamp(0) // sette inn så alle lys blir nullstilt??
 	ElevSetDoorOpenLamp(0)
 	ElevSetFloorIndicator(0)
-	for ElevGetFloorSensorSignal() == -1{
+
+	for ElevGetFloorSensorSignal() == -1 {
 		ElevSetSpeed(-300)//speed??
 	}
+
 	ElevSetSpeed(0)
+	ElevInitLights()
 	// Return success
 	return 1
 }
@@ -200,8 +203,8 @@ func ElevGetDirection() int {
 
 
 func ElevInitLights() {
-    for i :=0; i<types.N_FLOORS;i++{
-        for j := 0; j<3;j++ {
+    for i := 0; i < types.N_FLOORS; i++ {
+        for j := 0; j < 3; j++ {
             IoClearBit(lampChannelMatrix[i][j])
         }
     } 
