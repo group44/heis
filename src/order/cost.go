@@ -5,6 +5,7 @@ import (
 	"../types"
 	"fmt"
 	"math/rand"
+	//"math"
 	"time"
 )
 
@@ -12,6 +13,7 @@ func TestDistribute() {
 
 }
 
+/*
 // Calculates own cost for an order får ikke inn state, så den må fjernes hvis vi ikke finner ut av det.. 
 func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 	cost := 0
@@ -88,7 +90,7 @@ func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 	}
 	return cost
 }
-
+*/
 
 
 // Test function, gives random cost, goroutine
@@ -125,14 +127,14 @@ func Auction(GlobalOrders types.GlobalTable) {
 		bid = <-com.AuctionCh
 		com.PeerMap.Mu.Lock()
 
-		/*
-			for len(carts) < len(com.PeerMap.M)+1 {
-				carts[bid.ID-1] = bid.Cost
-				//For loop for receiving and processing cost from all elevators
-				//bid = <-com.AuctionCh
-				fmt.Println("test")
-			}
-		*/
+		
+		//for len(carts) < len(com.PeerMap.M)+1 {
+			//carts[bid.ID-1] = bid.Cost
+			//For loop for receiving and processing cost from all elevators
+			//bid = <-com.AuctionCh
+			//fmt.Println("test")
+		//}
+		
 
 		carts[bid.ID-1] = bid.Cost
 
@@ -163,7 +165,7 @@ func Claim(order []int, table types.GlobalTable) { // order: [floor, dir, ID]
 	if table[floor][dir] == 0 {
 		table[floor][dir] = types.CART_ID
 		outData := types.Data{Head: "table", Table: table}
-		com.TableCh <- table
+		//com.TableCh <- table
 		com.OutputCh <- outData
 
 		fmt.Println("Table casted:")

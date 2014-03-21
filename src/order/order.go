@@ -9,6 +9,7 @@ import (
 	"time"
 	"strings"
     "strconv"
+    "io/ioutil"
 )
 
 const (
@@ -20,7 +21,8 @@ const (
 var (
 
 	// Channel for signaling type of lights to be set, buffer = 2
-	UpdateLightCh = make(chan string, 2)
+	UpdateLightCh = make(chan string)
+	//UpdateLightCh = make(chan string, 2)
 	Direction     int
 
 	GlobalOrders   types.GlobalTable
@@ -41,7 +43,8 @@ func Run() {
 	go CheckExternalButtons()
 	go CalculateCost()
 	go Auction(GlobalOrders)
-	go UpdateGlobalTable()
+	//go UpdateGlobalTable()
+	go PrintTables()
 
 	<-done
 
@@ -87,14 +90,18 @@ func UpdateInternalTable() {
 
 }
 
+/*
 func UpdateGlobalTable() {
 
 	for {
 		time.Sleep(10 * time.Millisecond)
 		GlobalOrders = <-com.TableCh
+		fmt.Println("GlobalTable is updated")
+		fmt.Println(GlobalOrders)
 	}
 
 }
+*/
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne
@@ -308,11 +315,24 @@ func FindDirection() int {
 }
 
 func PrintTable() {
+	
 	fmt.Println("Internal:")
 	fmt.Println(InternalOrders)
 
 	fmt.Println("Global:")
 	fmt.Println(GlobalOrders)
+}
+
+//printer tabellen med 2 sek mellomrom
+func PrintTables() {
+	for {
+		fmt.Println("Internal:")
+		fmt.Println(InternalOrders)
+
+		fmt.Println("Global:")
+		fmt.Println(GlobalOrders)
+		time.Sleep(2000*time.Millisecond)
+	}
 }
 
 // Sends out an order from the global table for a new auction. Called if a peer has disconnected and InternalOrders has

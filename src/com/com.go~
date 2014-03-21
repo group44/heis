@@ -17,7 +17,7 @@ var (
 	PeerMap = NewPeerMap()
 
 	// Global channels
-	OutputCh = make(chan types.Data, 5)
+	OutputCh = make(chan types.Data)
 	OrderCh = make(chan []int)
 	TableCh = make(chan types.GlobalTable)
 	AuctionCh = make(chan types.Data)
@@ -35,13 +35,15 @@ func Run() {
 	broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
 	//broadcastAddr := "78.91.39.255:12000"
 	//broadcastAddr := "localhost:12000"
-	listenAddr := ":12000"
+	listenAddr := ":12000" 
 
 	lAddr, err := net.ResolveUDPAddr("udp", listenAddr)
+	CheckError(err)
 	bAddr, err := net.ResolveUDPAddr("udp", broadcastAddr)
 	CheckError(err)
 
 	lConn, err := net.ListenUDP("udp", lAddr)
+	CheckError(err)
 	bConn, err := net.DialUDP("udp", nil, bAddr)
 	CheckError(err)
 
@@ -134,7 +136,7 @@ func ReceiveData(conn *net.UDPConn) {
 		err = json.Unmarshal(b[:n], &inc)
 		CheckError(err)
 		fmt.Println("in:")
-		fmt.Println(inc)
+		//fmt.Println(inc)
 		
 		//fmt.Println(inc)
 
@@ -185,34 +187,6 @@ func ReceiveData(conn *net.UDPConn) {
 
 }
 
-/*
-func CastData(conn *net.UDPConn) {
-	encoder := gob.NewEncoder(conn)
-	var data types.Data
-	//err := encoder.Encode(data)
-	//CheckError(err)
-
-	for {
-		data = <-OutputCh
-		data.ID = types.CART_ID
-		data.T = time.Now() // Sets timestamp on outgoing data
-		fmt.Println("out:")
-		fmt.Println(data)
-
-		err := encoder.Encode(data)
-		CheckError(err)
-
-		/*
-		fmt.Println("Data casted:")
-		fmt.Println(data)
-		fmt.Println("")
-		*/
-/*
-		time.Sleep(100 * time.Millisecond)
-	}
-
-}
-*/
 
 func CastData(conn *net.UDPConn) {
 	var data types.Data
@@ -226,7 +200,6 @@ func CastData(conn *net.UDPConn) {
 		fmt.Println(data)
 		b := make([]byte, 1024)
 		b, err = json.Marshal(data)
-		fmt.Println(b)
 		CheckError(err)
 		_, err = conn.Write(b)
 		CheckError(err)
@@ -236,6 +209,7 @@ func CastData(conn *net.UDPConn) {
 	
 }
 
+/*
 func ChannelTester(c1 chan int, c2 chan []int, c3 chan [][]int, c4 chan int) {
 
 	for {
@@ -251,4 +225,4 @@ func ChannelTester(c1 chan int, c2 chan []int, c3 chan [][]int, c4 chan int) {
 		}
 	}
 
-}
+}*/

@@ -33,7 +33,6 @@ var (
 	downCh = make(chan bool)
 	upCh = make(chan bool)
 
-	Temp        bool
 )
 
 func Run() {
@@ -50,8 +49,6 @@ func Run() {
 	}
 	driver.ElevSetSpeed(0)
 	
-	
-
 	go Idle()
 	go Open()
 	go Down()
@@ -67,8 +64,6 @@ func Run() {
 
 	//ControlStateMachine()
 	//order.UpdateLocalTable(order.LocalOrders, order.C1)
-	
-	
 	
 	<- done
 
