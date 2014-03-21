@@ -27,8 +27,9 @@ func Run() {
 
 	done := make(chan bool)
 
-	broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
+	//broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
 	//broadcastAddr := "78.91.39.255:12000"
+	broadcastAddr := "localhost:12000"
 	listenAddr := ":12000"
 
 	lAddr, err := net.ResolveUDPAddr("udp", listenAddr)
@@ -52,6 +53,7 @@ func Run() {
 	//fmt.Println("receive")
 	go UpdatePeerMap(PeerMap)
 	//fmt.Println("UpdatePeerMap")
+	fmt.Println("goroutines initiated succesfully")
 
 	<-done
 }
