@@ -22,6 +22,7 @@ func main() {
 	go com.Run()
 	go elevator.Run()
 	
+	fmt.Println("test")
 
 	<-done
 	fmt.Println("End")

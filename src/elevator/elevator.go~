@@ -55,7 +55,7 @@ func Run() {
 	go Down()
 	go Up()
 	
-	idleCh <- true
+	IdleCh <- true
 	
 	
 	//Safety go routine
