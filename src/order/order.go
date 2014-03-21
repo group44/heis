@@ -146,7 +146,7 @@ func CheckExternalButtons() {
 				com.OutputCh <- data
 
 				fmt.Println("Order created:")
-				fmt.Println(data)
+				//fmt.Println(data)
 				fmt.Println("")
 
 				for driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) == 1 {
@@ -157,7 +157,7 @@ func CheckExternalButtons() {
 				com.OutputCh <- data
 
 				fmt.Println("Order created:")
-				fmt.Println(data)
+				//fmt.Println(data)
 				fmt.Println("")
 
 				for driver.ElevGetButtonSignal(driver.BUTTON_CALL_DOWN, i) == 1 {

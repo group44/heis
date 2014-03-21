@@ -110,6 +110,8 @@ func ReceiveData(conn *net.UDPConn) {
 	for {
 		time.Sleep(10 * time.Millisecond)
 		err := decoder.Decode(&inc)
+		fmt.Println("in:")
+		fmt.Println(inc)
 		CheckError(err)
 		//fmt.Println(inc)
 
@@ -161,20 +163,24 @@ func ReceiveData(conn *net.UDPConn) {
 func CastData(conn *net.UDPConn) {
 	encoder := gob.NewEncoder(conn)
 	data := types.Data{Head: "table", Table: types.NewGlobalTable()}
-	err := encoder.Encode(data)
-	CheckError(err)
-	fmt.Println(data)
+	//err := encoder.Encode(data)
+	//CheckError(err)
 
 	for {
 		data = <-OutputCh
 		data.ID = types.CART_ID
 		data.T = time.Now() // Sets timestamp on outgoing data
+		fmt.Println("out:")
+		//fmt.Println(data)
+
 		err := encoder.Encode(data)
 		CheckError(err)
 
-		fmt.Println("Data casted:")
-		fmt.Println(data)
-		fmt.Println("")
+		/*
+			fmt.Println("Data casted:")
+			fmt.Println(data)
+			fmt.Println("")
+		*/
 
 		time.Sleep(10 * time.Millisecond)
 	}
