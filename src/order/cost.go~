@@ -119,12 +119,12 @@ func Auction(GlobalOrders types.GlobalTable) {
 	var maxCost = 10
 	var bid types.Data
 	carts := make([]int, types.NUMBER_OF_CARTS)
+	fmt.Println("auction")
 
 	for {
 		
 		time.Sleep(10 * time.Millisecond)
 		bid = <-com.AuctionCh
-		fmt.Println("auction")
 		
 		
 		//com.PeerMap.Mu.Lock()

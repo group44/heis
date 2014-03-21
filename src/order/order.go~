@@ -88,7 +88,7 @@ func UpdateInternalTable() {
 func UpdateGlobalTable() {
 
 	for {
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		GlobalOrders = <-com.TableCh
 	}
 
@@ -283,7 +283,6 @@ func FindDirection() int {
 	if currentFloor != -1 && currentFloor < types.N_FLOORS && CheckOtherFloors() != -1 {
 		diff = currentFloor - CheckOtherFloors()
 	}
-	fmt.Println("next")
 	if diff > 0 {
 		return DOWN
 	} else if diff < 0 {
@@ -318,7 +317,7 @@ func UpdateLights() {
 		switch msg {
 		case "internal":
 			for i := range InternalOrders {
-				time.Sleep(10 * time.Millisecond)
+				time.Sleep(50 * time.Millisecond)
 				driver.ElevSetLights(i, 2, InternalOrders[i])
 			}
 			fmt.Println("Internal Lights updated")

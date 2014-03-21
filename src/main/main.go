@@ -7,7 +7,7 @@ import (
 	"../com"
 	"../order"
 	//"../driver"
-	"../elevator"
+	//"../elevator"
 	//"time"
 	"runtime"
 )
@@ -20,7 +20,7 @@ func main() {
 
 	go order.Run()
 	go com.Run()
-	go elevator.Run()
+	//go elevator.Run()
 	
 
 	<-done

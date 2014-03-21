@@ -5,9 +5,9 @@ import (
 	//"net"
 	//"../types"
 	"../com"
-	"../order"
+	//"../order"
 	//"../driver"
-	"../elevator"
+	//"../elevator"
 	//"time"
 	"runtime"
 )
@@ -20,9 +20,8 @@ func main() {
 
 	go order.Run()
 	go com.Run()
-	go elevator.Run()
+	//go elevator.Run()
 	
-	fmt.Println("test")
 
 	<-done
 	fmt.Println("End")

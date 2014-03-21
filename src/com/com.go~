@@ -6,30 +6,35 @@ import (
 	"net"
 	//"sync"
 	//"../order"
-	"encoding/gob"
+	//"encoding/gob"
 	"os"
 	"time"
+	"encoding/json"
 )
 
-var PeerMap = NewPeerMap()
+var (
 
-// Global channels
-var OutputCh = make(chan types.Data, 5)
-var OrderCh = make(chan []int)
-var TableCh = make(chan types.GlobalTable)
-var AuctionCh = make(chan types.Data)
+	PeerMap = NewPeerMap()
 
-// Local channels
-var peerCh = make(chan int)
+	// Global channels
+	OutputCh = make(chan types.Data, 5)
+	OrderCh = make(chan []int)
+	TableCh = make(chan types.GlobalTable)
+	AuctionCh = make(chan types.Data)
+
+	// Local channels
+	peerCh = make(chan int)
+	
+)
 
 // Create sockets and start go routines
 func Run() {
 
 	done := make(chan bool)
 
-	//broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
+	broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
 	//broadcastAddr := "78.91.39.255:12000"
-	broadcastAddr := "localhost:12000"
+	//broadcastAddr := "localhost:12000"
 	listenAddr := ":12000"
 
 	lAddr, err := net.ResolveUDPAddr("udp", listenAddr)
@@ -44,7 +49,7 @@ func Run() {
 
 	//fmt.Println("Channels created succesfully")
 
-	//testData := types.Data{"cost", []int{1, 0, 1}, [][]int{}, 2, types.CART_ID, time.Now()}
+	
 
 	//go ChannelTester()
 	go CastData(bConn)
@@ -53,7 +58,17 @@ func Run() {
 	//fmt.Println("receive")
 	go UpdatePeerMap(PeerMap)
 	//fmt.Println("UpdatePeerMap")
-	fmt.Println("goroutines initiated succesfully")
+	
+	
+	//testData := types.Data{"cost", []int{1, 0}, [][]int{}, 2, types.CART_ID, time.Now()}
+	//AuctionCh <- testData
+	
+	/*
+	for {
+		OutputCh <- testData
+		time.Sleep(500 * time.Millisecond)
+	}
+	*/
 
 	<-done
 }
@@ -65,7 +80,7 @@ func CheckError(err error) {
 	}
 }
 
-// Creates a map with peer IP as key and timer as element
+// Creates a map with peer IP as key and time.Time as element
 func NewPeerMap() *types.PeerMap {
 	return &types.PeerMap{M: make(map[int]time.Time)}
 }
@@ -93,13 +108,15 @@ func UpdatePeerMap(p *types.PeerMap) {
 	var id int
 
 	for {
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		id = <-peerCh
 
 		p.Mu.Lock()
 		p.M[id] = time.Now()
 		p.Mu.Unlock()
-		//fmt.Println("peer")
+		
+		//fmt.Println("Map updated:")
+		//fmt.Println(p)
 	}
 
 }
@@ -107,14 +124,18 @@ func UpdatePeerMap(p *types.PeerMap) {
 // Listens and receives from connection in seperate go-routine
 func ReceiveData(conn *net.UDPConn) {
 	var inc types.Data
-	decoder := gob.NewDecoder(conn)
+	//var err error
+	var b = make([]byte, 1024)
 
 	for {
-		time.Sleep(10 * time.Millisecond)
-		err := decoder.Decode(&inc)
+		time.Sleep(100 * time.Millisecond)
+		n, _, err := conn.ReadFromUDP(b)
+		CheckError(err)
+		err = json.Unmarshal(b[:n], &inc)
+		CheckError(err)
 		fmt.Println("in:")
 		fmt.Println(inc)
-		CheckError(err)
+		
 		//fmt.Println(inc)
 
 		/*
@@ -145,7 +166,9 @@ func ReceiveData(conn *net.UDPConn) {
 			fmt.Println("")
 
 		case "cost":
+			//fmt.Println(inc)
 			AuctionCh <- inc
+			//fmt.Println(AuctionCh)
 
 			fmt.Println("Cost received:")
 			fmt.Println(inc)
@@ -162,9 +185,10 @@ func ReceiveData(conn *net.UDPConn) {
 
 }
 
+/*
 func CastData(conn *net.UDPConn) {
 	encoder := gob.NewEncoder(conn)
-	data := types.Data{Head: "table", Table: types.NewGlobalTable()}
+	var data types.Data
 	//err := encoder.Encode(data)
 	//CheckError(err)
 
@@ -173,20 +197,43 @@ func CastData(conn *net.UDPConn) {
 		data.ID = types.CART_ID
 		data.T = time.Now() // Sets timestamp on outgoing data
 		fmt.Println("out:")
-		//fmt.Println(data)
+		fmt.Println(data)
 
 		err := encoder.Encode(data)
 		CheckError(err)
 
 		/*
-			fmt.Println("Data casted:")
-			fmt.Println(data)
-			fmt.Println("")
+		fmt.Println("Data casted:")
+		fmt.Println(data)
+		fmt.Println("")
 		*/
-
-		time.Sleep(10 * time.Millisecond)
+/*
+		time.Sleep(100 * time.Millisecond)
 	}
 
+}
+*/
+
+func CastData(conn *net.UDPConn) {
+	var data types.Data
+	var err error
+	
+	for {
+		data = <- OutputCh
+		data.ID = types.CART_ID
+		data.T = time.Now()
+		fmt.Println("out:")
+		fmt.Println(data)
+		b := make([]byte, 1024)
+		b, err = json.Marshal(data)
+		fmt.Println(b)
+		CheckError(err)
+		_, err = conn.Write(b)
+		CheckError(err)
+		
+	
+	}
+	
 }
 
 func ChannelTester(c1 chan int, c2 chan []int, c3 chan [][]int, c4 chan int) {
