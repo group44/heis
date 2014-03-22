@@ -43,7 +43,7 @@ func Run() {
 	go CheckExternalButtons()
 	go CalculateCost()
 	go Auction(GlobalOrders)
-	//go UpdateGlobalTable()
+	go UpdateGlobalTable()
 	go PrintTables()
 
 	<-done
@@ -90,7 +90,7 @@ func UpdateInternalTable() {
 
 }
 
-/*
+
 func UpdateGlobalTable() {
 
 	for {
@@ -98,10 +98,11 @@ func UpdateGlobalTable() {
 		GlobalOrders = <-com.TableCh
 		fmt.Println("GlobalTable is updated")
 		fmt.Println(GlobalOrders)
+		UpdateLightCh <- "global"
 	}
 
 }
-*/
+
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne

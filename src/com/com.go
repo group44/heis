@@ -59,7 +59,7 @@ func Run() {
 	go ReceiveData(lConn)
 	//fmt.Println("receive")
 	go UpdatePeerMap(PeerMap)
-	//fmt.Println("UpdatePeerMap")
+	fmt.Println("UpdatePeerMap")
 	
 	
 	//testData := types.Data{"cost", []int{1, 0}, [][]int{}, 2, types.CART_ID, time.Now()}
@@ -117,8 +117,6 @@ func UpdatePeerMap(p *types.PeerMap) {
 		p.M[id] = time.Now()
 		p.Mu.Unlock()
 		
-		//fmt.Println("Map updated:")
-		//fmt.Println(p)
 	}
 
 }
@@ -131,10 +129,12 @@ func ReceiveData(conn *net.UDPConn) {
 
 	for {
 		time.Sleep(100 * time.Millisecond)
+		
 		n, _, err := conn.ReadFromUDP(b)
 		CheckError(err)
 		err = json.Unmarshal(b[:n], &inc)
 		CheckError(err)
+		
 		fmt.Println("in:")
 		//fmt.Println(inc)
 		
@@ -161,15 +161,18 @@ func ReceiveData(conn *net.UDPConn) {
 			fmt.Println("")
 
 		case "table":
-			TableCh <- inc.Table
-
-			fmt.Println("Table received and updated")
-			fmt.Println(inc.Table)
-			fmt.Println("")
+			if inc.ID != types.CART_ID {			
+				TableCh <- inc.Table
+				
+				fmt.Println("Table received and updated")
+				fmt.Println(inc.Table)
+				fmt.Println("")
+			}
 
 		case "cost":
 			//fmt.Println(inc)
 			AuctionCh <- inc
+			
 			//fmt.Println(AuctionCh)
 
 			fmt.Println("Cost received:")

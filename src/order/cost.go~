@@ -95,6 +95,7 @@ func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 
 // Test function, gives random cost, goroutine
 
+
 func CalculateCost() {
 	var cost int
 	order := make([]int, 2)
@@ -104,7 +105,7 @@ func CalculateCost() {
 		// Temp
 		cost = rand.Intn(10) + 1
 		// Temp
-		com.OutputCh <- types.Data{Head: "cost", Order: order, Cost: cost, Table: GlobalOrders}
+		com.OutputCh <- types.Data{Head: "cost", Order: order, Cost: cost}
 
 		fmt.Println("Cost calculated:")
 		fmt.Println(cost)
@@ -113,41 +114,61 @@ func CalculateCost() {
 
 }
 
+/*
+func CalculateCost() {
+	var order = make([]int, 2)
+	order = <- com.OrderCh
+	com.OutputCh <- types.Data{Head:"cost", Order: order, Cost: 1}
+}
+*/
+
 // Initiates an "auction" to determine which cart that should dispatch an order.
 // Bids in range 0-10, consider changing this - goroutine
 func Auction(GlobalOrders types.GlobalTable) {
 	var winner int
 	var maxCost = 10
 	var bid types.Data
+	var currentOrder = make([]int, 2)
+	currentOrder[0], currentOrder[1] = -1, -1
 	carts := make([]int, types.NUMBER_OF_CARTS)
 
 	for {
-
+		
+		//fmt.Println(currentOrder)
 		time.Sleep(10 * time.Millisecond)
 		bid = <-com.AuctionCh
+
+		if currentOrder[0] == -1  {
+			currentOrder = bid.Order
+		}
+		
+		//fmt.Println(bid.Order)
+		
 		com.PeerMap.Mu.Lock()
-
+		fmt.Println("len carts")
+		for len(carts) < len(com.PeerMap.M)+1 {
+			time.Sleep(50 * time.Millisecond)
+			if bid.Order[0] == currentOrder[0] && bid.Order[1] == currentOrder[1] {
+				carts[bid.ID-1] = bid.Cost
+			}
+			bid = <-com.AuctionCh
+			
+		}
 		
-		//for len(carts) < len(com.PeerMap.M)+1 {
-			//carts[bid.ID-1] = bid.Cost
-			//For loop for receiving and processing cost from all elevators
-			//bid = <-com.AuctionCh
-			//fmt.Println("test")
-		//}
-		
-
-		carts[bid.ID-1] = bid.Cost
-
+		currentOrder[0] = -1
 		com.PeerMap.Mu.Unlock()
-
+		
+		//fmt.Println(len(carts))
 		// This may cause two or more elevators to claim the same order (if they have equal cost
 		for i := 0; i < len(carts); i++ {
-
+			fmt.Println("evig")
 			if carts[i] < maxCost {
 				maxCost = carts[i]
 				winner = i + 1
 			}
 		}
+		fmt.Println("WINNER:")
+		fmt.Println(winner)
 
 		if winner == types.CART_ID {
 			Claim(bid.Order, GlobalOrders)
@@ -165,12 +186,17 @@ func Claim(order []int, table types.GlobalTable) { // order: [floor, dir, ID]
 	if table[floor][dir] == 0 {
 		table[floor][dir] = types.CART_ID
 		outData := types.Data{Head: "table", Table: table}
+		fmt.Println(" ")
+		fmt.Println(table)
+		fmt.Println(" ")
 		com.TableCh <- table
 		com.OutputCh <- outData
 
+		/*
 		fmt.Println("Table casted:")
 		fmt.Println(outData)
 		fmt.Println("")
+		*/
 	}
 }
 
