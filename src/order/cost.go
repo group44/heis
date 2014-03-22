@@ -14,7 +14,7 @@ func TestDistribute() {
 }
 
 /*
-// Calculates own cost for an order får ikke inn state, så den må fjernes hvis vi ikke finner ut av det.. 
+// Calculates own cost for an order får ikke inn state, så den må fjernes hvis vi ikke finner ut av det..
 func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 	cost := 0
 	elevatorDir := GetOrderDirection()
@@ -92,9 +92,7 @@ func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 }
 */
 
-
 // Test function, gives random cost, goroutine
-
 
 func CalculateCost() {
 	var cost int
@@ -105,11 +103,12 @@ func CalculateCost() {
 		// Temp
 		cost = rand.Intn(10) + 1
 		// Temp
-		com.OutputCh <- types.Data{Head: "cost", Order: order, Cost: cost}
 
-		fmt.Println("Cost calculated:")
-		fmt.Println(cost)
-		fmt.Println("")
+		fmt.Println("Cost calculated and sent")
+		//fmt.Println(cost)
+		//fmt.Println("")
+
+		com.OutputCh <- types.Data{Head: "cost", Order: order, Cost: cost}
 	}
 
 }
@@ -133,39 +132,36 @@ func Auction(GlobalOrders types.GlobalTable) {
 	carts := make([]int, types.NUMBER_OF_CARTS)
 
 	for {
-		
+
 		//fmt.Println(currentOrder)
 		time.Sleep(10 * time.Millisecond)
 		bid = <-com.AuctionCh
 
-		if currentOrder[0] == -1  {
-			currentOrder = bid.Order
+		if currentOrder[0] == -1 {
+			copy(currentOrder, bid.Order)
 		}
-		
-		//fmt.Println(bid.Order)
-		
+
 		com.PeerMap.Mu.Lock()
-		fmt.Println("len carts")
 		for len(carts) < len(com.PeerMap.M)+1 {
 			time.Sleep(50 * time.Millisecond)
 			if bid.Order[0] == currentOrder[0] && bid.Order[1] == currentOrder[1] {
 				carts[bid.ID-1] = bid.Cost
 			}
 			bid = <-com.AuctionCh
-			
+
 		}
-		
+
 		currentOrder[0] = -1
 		com.PeerMap.Mu.Unlock()
-		
+
 		// This may cause two or more elevators to claim the same order (if they have equal cost
 		for i := 0; i < len(carts); i++ {
-			fmt.Println("evig")
 			if carts[i] < maxCost {
 				maxCost = carts[i]
 				winner = i + 1
 			}
 		}
+
 		fmt.Println("WINNER:")
 		fmt.Println(winner)
 
@@ -185,16 +181,15 @@ func Claim(order []int, table types.GlobalTable) { // order: [floor, dir, ID]
 	if table[floor][dir] == 0 {
 		table[floor][dir] = types.CART_ID
 		outData := types.Data{Head: "table", Table: table}
-		fmt.Println(" ")
-		fmt.Println(table)
-		fmt.Println(" ")
+		fmt.Println("Sending table from Claim")
 		com.TableCh <- table
+		fmt.Println("Sending Output from Claim")
 		com.OutputCh <- outData
 
 		/*
-		fmt.Println("Table casted:")
-		fmt.Println(outData)
-		fmt.Println("")
+			fmt.Println("Table casted:")
+			fmt.Println(outData)
+			fmt.Println("")
 		*/
 	}
 }

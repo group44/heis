@@ -13,9 +13,9 @@ const (
 	DOWN = 1
 	IDLE = 2
 	OPEN = 3
-	
-	ON  = 1
-	OFF = 0
+
+	ON    = 1
+	OFF   = 0
 	SPEED = 300
 )
 
@@ -27,12 +27,11 @@ var (
 
 	// Local channels
 	doorTimerStartCh = make(chan bool)
-	doorTimerDoneCh = make(chan bool)
-	idleCh = make(chan bool)
-	openCh = make(chan bool)
-	downCh = make(chan bool)
-	upCh = make(chan bool)
-
+	doorTimerDoneCh  = make(chan bool)
+	idleCh           = make(chan bool)
+	openCh           = make(chan bool)
+	downCh           = make(chan bool)
+	upCh             = make(chan bool)
 )
 
 func Run() {
@@ -48,15 +47,14 @@ func Run() {
 		driver.ElevSetSpeed(-SPEED)
 	}
 	driver.ElevSetSpeed(0)
-	
+
 	go Idle()
 	go Open()
 	go Down()
 	go Up()
-	
+
 	idleCh <- true
-	
-	
+
 	//Safety go routine
 	//go Safety()
 	//Door timer go routine
@@ -64,52 +62,49 @@ func Run() {
 
 	//ControlStateMachine()
 	//order.UpdateLocalTable(order.LocalOrders, order.C1)
-	
-	<- done
+
+	<-done
 
 }
 
-	
-
 func Idle() {
 	for {
-		
-		<- idleCh
 
-		fmt.Println("ENTERED IDLE")
+		<-idleCh
+
+		//fmt.Println("ENTERED IDLE")
 
 		driver.ElevSetDoorOpenLamp(OFF)
 		driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
-		
+
 		//fmt.Println(order.CheckCurrentFloor())
-		fmt.Println(order.FindDirection())
+		//fmt.Println(order.FindDirection())
 		for { //Her går den helt til den oppnår betingelsene for en ny state
 			if order.CheckCurrentFloor() {
-				fmt.Println("opentest")
 				openCh <- true
 				break
-			
-			} else if order.FindDirection() == 1 {// || order.FindDirection() == -1 {
+
+			} else if order.FindDirection() == 1 { // || order.FindDirection() == -1 {
 				downCh <- true
 				break
 			} else if order.FindDirection() == 0 {
 				upCh <- true
 				break
 			}
-			time.Sleep(100*time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
-		fmt.Println("IDLE END")
+		//fmt.Println("IDLE END")
 
-	}	
+	}
 }
 
 func Open() {
 	for {
 
-		<- openCh
-		fmt.Println("ENTERED OPEN")
+		<-openCh
+		//fmt.Println("ENTERED OPEN")
 
-		driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen			
+		driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
 		order.ClearOrder()
 
 		doorTimerStartCh <- true
@@ -122,15 +117,15 @@ func Open() {
 func Down() {
 	for {
 
-		<- downCh
-		fmt.Println("ENTERED DOWN")
+		<-downCh
+		//fmt.Println("ENTERED DOWN")
 
 		driver.ElevSetSpeed(-SPEED) // verdi?
 
 		for !order.CheckCurrentFloor() {
 			time.Sleep(100 * time.Millisecond)
 		}
-		
+
 		openCh <- true
 
 	}
@@ -139,21 +134,20 @@ func Down() {
 func Up() {
 	for {
 
-		<- upCh
-		fmt.Println("ENTERED UP")
+		<-upCh
+		//fmt.Println("ENTERED UP")
 
 		driver.ElevSetSpeed(SPEED) // verdi?
 
 		for !order.CheckCurrentFloor() {
 			time.Sleep(100 * time.Millisecond)
 		}
-		
+
 		openCh <- true
 
 	}
 
 }
-
 
 // Old state machine
 /*
@@ -221,7 +215,7 @@ func ControlStateMachine() {
 
 			case OPEN:
 				driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
-				
+
 				order.ClearOrder()
 				break
 

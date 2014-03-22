@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	CART_ID   = 1
+	CART_ID   = 2
 	N_FLOORS  = 4
 	N_BUTTONS = 4
 
-	NUMBER_OF_CARTS = 1
+	NUMBER_OF_CARTS = 2
 
 	// Global timeout const
 	TIMEOUT = 1 * time.Second

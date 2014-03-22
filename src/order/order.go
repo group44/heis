@@ -5,11 +5,11 @@ import (
 	"../driver"
 	"../types"
 	"fmt"
+	"io/ioutil"
 	"os"
-	"time"
+	"strconv"
 	"strings"
-    "strconv"
-    "io/ioutil"
+	"time"
 )
 
 const (
@@ -23,7 +23,7 @@ var (
 	// Channel for signaling type of lights to be set, buffer = 2
 	UpdateLightCh = make(chan string)
 	//UpdateLightCh = make(chan string, 2)
-	Direction     int
+	Direction int
 
 	GlobalOrders   types.GlobalTable
 	InternalOrders types.InternalTable
@@ -44,7 +44,7 @@ func Run() {
 	go CalculateCost()
 	go Auction(GlobalOrders)
 	go UpdateGlobalTable()
-	go PrintTables()
+	//go PrintTables()
 
 	<-done
 
@@ -80,8 +80,8 @@ func UpdateInternalTable() {
 		for i := range InternalOrders {
 			if InternalOrders[i] != 1 {
 				if driver.ElevGetButtonSignal(INTERNAL, i) == 1 {
-					InternalOrders[i] = driver.ElevGetButtonSignal(INTERNAL, i)
-					fmt.Println("Internal order table updated")
+					//InternalOrders[i] = driver.ElevGetButtonSignal(INTERNAL, i)
+					//fmt.Println("Internal order table updated")
 					UpdateLightCh <- "internal"
 				}
 			}
@@ -90,19 +90,17 @@ func UpdateInternalTable() {
 
 }
 
-
 func UpdateGlobalTable() {
 
 	for {
 		time.Sleep(10 * time.Millisecond)
 		GlobalOrders = <-com.TableCh
 		fmt.Println("GlobalTable is updated")
-		fmt.Println(GlobalOrders)
+		//fmt.Println(GlobalOrders)
 		UpdateLightCh <- "global"
 	}
 
 }
-
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne
@@ -316,7 +314,7 @@ func FindDirection() int {
 }
 
 func PrintTable() {
-	
+
 	fmt.Println("Internal:")
 	fmt.Println(InternalOrders)
 
@@ -332,7 +330,7 @@ func PrintTables() {
 
 		fmt.Println("Global:")
 		fmt.Println(GlobalOrders)
-		time.Sleep(2000*time.Millisecond)
+		time.Sleep(2000 * time.Millisecond)
 	}
 }
 
@@ -356,7 +354,7 @@ func UpdateLights() {
 				time.Sleep(10 * time.Millisecond)
 				driver.ElevSetLights(i, 2, InternalOrders[i])
 			}
-			fmt.Println("Internal Lights updated")
+			//fmt.Println("Internal Lights updated")
 
 		case "global":
 
@@ -370,7 +368,7 @@ func UpdateLights() {
 					}
 				}
 			}
-			fmt.Println("Global Lights updated")
+			//fmt.Println("Global Lights updated")
 		}
 
 	}
@@ -386,21 +384,23 @@ func Backup() {
 
 func ReadFile() {
 	b, err := ioutil.ReadFile("backup.txt")
-    if err != nil { panic(err) }
-    internal := strings.Split(string(b),"")
-    for i:=0;i<types.N_FLOORS;i++{
-    	InternalOrders[i],_ = strconv.Atoi(internal[i])
-    }
-    //InternalOrders[1],_ = strconv.Atoi(internal[1])
-    //InternalOrders[2],_ = strconv.Atoi(internal[2])
-    //InternalOrders[3],_ = strconv.Atoi(internal[3])
+	if err != nil {
+		panic(err)
+	}
+	internal := strings.Split(string(b), "")
+	for i := 0; i < types.N_FLOORS; i++ {
+		InternalOrders[i], _ = strconv.Atoi(internal[i])
+	}
+	//InternalOrders[1],_ = strconv.Atoi(internal[1])
+	//InternalOrders[2],_ = strconv.Atoi(internal[2])
+	//InternalOrders[3],_ = strconv.Atoi(internal[3])
 }
 
 // i denne må det leges til flere hvis heisen utvides til fler etasjer
 func WriteFile() {
-	msg := strconv.Itoa(InternalOrders[0])+strconv.Itoa(InternalOrders[1])+strconv.Itoa(InternalOrders[2])+strconv.Itoa(InternalOrders[3])
-    buf := []byte(msg)
-    _ = ioutil.WriteFile("backup.txt", buf, 0644)
+	msg := strconv.Itoa(InternalOrders[0]) + strconv.Itoa(InternalOrders[1]) + strconv.Itoa(InternalOrders[2]) + strconv.Itoa(InternalOrders[3])
+	buf := []byte(msg)
+	_ = ioutil.WriteFile("backup.txt", buf, 0644)
 }
 
 func check(e error) {

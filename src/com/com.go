@@ -7,24 +7,22 @@ import (
 	//"sync"
 	//"../order"
 	//"encoding/gob"
+	"encoding/json"
 	"os"
 	"time"
-	"encoding/json"
 )
 
 var (
-
 	PeerMap = NewPeerMap()
 
 	// Global channels
-	OutputCh = make(chan types.Data)
-	OrderCh = make(chan []int)
-	TableCh = make(chan types.GlobalTable)
+	OutputCh  = make(chan types.Data)
+	OrderCh   = make(chan []int)
+	TableCh   = make(chan types.GlobalTable)
 	AuctionCh = make(chan types.Data)
 
 	// Local channels
 	peerCh = make(chan int)
-	
 )
 
 // Create sockets and start go routines
@@ -35,7 +33,7 @@ func Run() {
 	broadcastAddr := "129.241.187.255:12000" // For sanntidssalen
 	//broadcastAddr := "78.91.39.255:12000"
 	//broadcastAddr := "localhost:12000"
-	listenAddr := ":12000" 
+	listenAddr := ":12000"
 
 	lAddr, err := net.ResolveUDPAddr("udp", listenAddr)
 	CheckError(err)
@@ -51,8 +49,6 @@ func Run() {
 
 	//fmt.Println("Channels created succesfully")
 
-	
-
 	//go ChannelTester()
 	go CastData(bConn)
 	//fmt.Println("cast")
@@ -60,16 +56,15 @@ func Run() {
 	//fmt.Println("receive")
 	go UpdatePeerMap(PeerMap)
 	fmt.Println("UpdatePeerMap")
-	
-	
+
 	//testData := types.Data{"cost", []int{1, 0}, [][]int{}, 2, types.CART_ID, time.Now()}
 	//AuctionCh <- testData
-	
+
 	/*
-	for {
-		OutputCh <- testData
-		time.Sleep(500 * time.Millisecond)
-	}
+		for {
+			OutputCh <- testData
+			time.Sleep(500 * time.Millisecond)
+		}
 	*/
 
 	<-done
@@ -116,7 +111,7 @@ func UpdatePeerMap(p *types.PeerMap) {
 		p.Mu.Lock()
 		p.M[id] = time.Now()
 		p.Mu.Unlock()
-		
+		fmt.Println(PeerMap)
 	}
 
 }
@@ -129,22 +124,14 @@ func ReceiveData(conn *net.UDPConn) {
 
 	for {
 		time.Sleep(100 * time.Millisecond)
-		
+
 		n, _, err := conn.ReadFromUDP(b)
 		CheckError(err)
 		err = json.Unmarshal(b[:n], &inc)
 		CheckError(err)
-		
-		fmt.Println("in:")
-		//fmt.Println(inc)
-		
-		//fmt.Println(inc)
 
-		/*
-			if inc.ID == types.CART_ID {
-				continue
-			}
-		*/
+		//fmt.Println("in:")
+		//fmt.Println(inc)
 
 		if inc.ID > 0 {
 			// update peermap
@@ -154,29 +141,30 @@ func ReceiveData(conn *net.UDPConn) {
 		switch inc.Head {
 
 		case "order":
-			OrderCh <- inc.Order
-
 			fmt.Println("Order received:")
-			fmt.Println(inc.Order)
+			//fmt.Println(inc.Order)
 			fmt.Println("")
 
+			OrderCh <- inc.Order
+
 		case "table":
-			if inc.ID != types.CART_ID {			
-				TableCh <- inc.Table
-				
-				fmt.Println("Table received and updated")
-				fmt.Println(inc.Table)
+			if inc.ID != types.CART_ID {
+				fmt.Println("Table received")
+				//fmt.Println(inc.Table)
 				fmt.Println("")
+
+				TableCh <- inc.Table
+
 			}
 
 		case "cost":
 			//fmt.Println(inc)
 			AuctionCh <- inc
-			
+
 			//fmt.Println(AuctionCh)
 
 			fmt.Println("Cost received:")
-			fmt.Println(inc)
+			//fmt.Println(inc)
 			fmt.Println("")
 
 		default:
@@ -190,13 +178,12 @@ func ReceiveData(conn *net.UDPConn) {
 
 }
 
-
 func CastData(conn *net.UDPConn) {
 	var data types.Data
 	var err error
-	
+
 	for {
-		data = <- OutputCh
+		data = <-OutputCh
 		data.ID = types.CART_ID
 		data.T = time.Now()
 		fmt.Println("out:")
@@ -206,10 +193,9 @@ func CastData(conn *net.UDPConn) {
 		CheckError(err)
 		_, err = conn.Write(b)
 		CheckError(err)
-		
-	
+
 	}
-	
+
 }
 
 /*
