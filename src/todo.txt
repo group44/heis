@@ -2,6 +2,7 @@
 
 
 * fikse cost
+**cost er nå fikset og gir verdi, gjenstår sikkert litt optimalisering og justere de forskjellige verdiene
 
 * fikse auction !! viktig, denne må fikses for å få fler heiser til å kunne kjøre sammen
 

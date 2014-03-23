@@ -147,17 +147,17 @@ func ReceiveData(conn *net.UDPConn) {
 		switch inc.Head {
 
 		case "order":
+			OrderCh <- inc.Order
 			fmt.Println("Order received:")
 			//fmt.Println(inc.Order)
 			fmt.Println("")
-			OrderCh <- inc.Order
 
 		case "table":
 			if inc.ID != types.CART_ID {
 				fmt.Println("Table received")
 				//fmt.Println(inc.Table)
 				fmt.Println("")
-				//TableCh <- inc.Table
+				//TableCh <- inc.Table //
 				fmt.Println("kommer vi hertil??????")
 
 			}
@@ -167,7 +167,7 @@ func ReceiveData(conn *net.UDPConn) {
 			//fmt.Println(inc)
 			//fmt.Println(AuctionCh)
 			fmt.Println("Cost received:")
-			//fmt.Println(inc)
+			fmt.Println(inc.Cost)
 			fmt.Println("")
 
 		case "addorder":

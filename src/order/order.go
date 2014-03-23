@@ -35,16 +35,15 @@ func Run() {
 
 	GlobalOrders = types.NewGlobalTable()
 	InternalOrders = types.NewInternalTable()
-	ReadFile()
 	Direction = UP
 
 	go UpdateInternalTable()
 	go UpdateLights()
+	ReadFile()
 	go CheckExternalButtons()
-	go CalculateCost()
 	go Auction(GlobalOrders)
-	//go UpdateGlobalTable()
 	go AddOrder()
+	go HandleCost()
 	go RemoveOrder()
 	//go PrintTables()
 
@@ -58,20 +57,6 @@ func CheckError(err error) {
 		os.Exit(1)
 	}
 }
-
-/* Todo
-func CheckError(err string) {
-	if err != nil {
-		fmt.Println("")
-	}
-}
-*/
-
-/*
-func GetClosestElevator() {
-
-}
-*/
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne, denne i en go routine?
@@ -91,19 +76,6 @@ func UpdateInternalTable() {
 	}
 
 }
-
-//Denne er kanskje unødvendig nå?!?!?!?!?!?!?!?!?!?!?!??
-/*func UpdateGlobalTable() {
-
-	for {
-		time.Sleep(10 * time.Millisecond)
-		GlobalOrders = <-com.TableCh
-		fmt.Println("GlobalTable is updated")
-		//fmt.Println(GlobalOrders)
-		UpdateLightCh <- "global"
-	}
-
-}*/
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne
@@ -373,7 +345,7 @@ func UpdateLights() {
 
 func Backup() {
 	for {
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(250 * time.Millisecond)
 		WriteFile()
 	}
 }
@@ -387,12 +359,11 @@ func ReadFile() {
 	for i := 0; i < types.N_FLOORS; i++ {
 		InternalOrders[i], _ = strconv.Atoi(internal[i])
 	}
-	//InternalOrders[1],_ = strconv.Atoi(internal[1])
-	//InternalOrders[2],_ = strconv.Atoi(internal[2])
-	//InternalOrders[3],_ = strconv.Atoi(internal[3])
+	UpdateLightCh <- "internal"
 }
 
 // i denne må det leges til flere hvis heisen utvides til fler etasjer
+// denne virker ikke helt :(
 func WriteFile() {
 	msg := strconv.Itoa(InternalOrders[0]) + strconv.Itoa(InternalOrders[1]) + strconv.Itoa(InternalOrders[2]) + strconv.Itoa(InternalOrders[3])
 	buf := []byte(msg)
@@ -405,7 +376,7 @@ func check(e error) {
 	}
 }
 
-//add order to the global table, must be fixed for the right cart number
+//add order to the global table
 //after order is added it sends the new table too be casted
 func AddOrder() {
 	var inc types.Data
@@ -424,7 +395,7 @@ func AddOrder() {
 	}
 }
 
-//removes order from globaltable, must be fixed for right cart number?
+//removes order from globaltable
 //after order is removed it sends the new table to be casted
 func RemoveOrder() {
 	order := make([]int, 2)
@@ -440,16 +411,3 @@ func RemoveOrder() {
 		time.Sleep(25 * time.Millisecond)
 	}
 }
-
-//takes the casted table and updates the global table so all elevators have the same globaltable
-/*
-func UpdateGlobalTable() {
-	var tempTable = types.NewGlobalTable()
-	for {
-		tempTable = <-com.UpdateGlobalTableCh
-		GlobalOrders = tempTable
-		time.Sleep(25 * time.Millisecond)
-
-	}
-}
-*/
