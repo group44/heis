@@ -104,55 +104,46 @@ func HandleCost() {
 	}
 }
 
-func Auction(GlobalOrders types.GlobalTable) {
+func Auction() {
 	var winner int
-	var maxCost = 100
-	var bid types.Data
+	var lowestCost = 100
 	var currentOrder = make([]int, 2)
 	currentOrder[0], currentOrder[1] = -1, -1
-	carts := make([]int, types.NUMBER_OF_CARTS)
+	var auctionMap = make(map[int]int)
+	var bidder types.Data
 
 	for {
-
-		//fmt.Println(currentOrder)
-		//hva skal komme inn her? går det til cost først eller til denne først?
-		bid = <-com.AuctionCh
-		com.PeerMap.Mu.Lock()
-
-		fmt.Println("len peermap:", len(com.PeerMap.M))
-		fmt.Println("len carts", len(carts))
-		for !ContainsAll(carts) && len(com.PeerMap.M) > 1 {
+		for cart := range PeerMap.M {
+			auctionMap[cart] = PeerMap.M[cart]
+		}
+		for {
 			time.Sleep(50 * time.Millisecond)
-			//bid = <-com.AuctionCh
+			select {
+			case bidder = <-AuctionCh:
+				if currentOrder[0] == -1 {
+					copy(currentOrder, bidder.Order)
+				}
+				auctionMap[bidder.ID] = bidder.Cost
+			default:
+				break
+			}
 
-			if currentOrder[0] == -1 {
-				copy(currentOrder, bid.Order)
-			}
-			if bid.Order[0] == currentOrder[0] && bid.Order[1] == currentOrder[1] {
-				carts[bid.ID-1] = bid.Cost
-			}
-			if !ContainsAll(carts) && len(com.PeerMap.M) > 1 {
-				bid = <-com.AuctionCh
-			}
 			fmt.Println(carts)
 		}
 
 		currentOrder[0] = -1
-		com.PeerMap.Mu.Unlock()
 
-		// This may cause two or more elevators to claim the same order (if they have equal cost
-		for i := 0; i < len(carts); i++ {
-			if carts[i] < maxCost {
-				maxCost = carts[i]
-				winner = i + 1
+		for cart := range auctionMap {
+			if auctionMap[cart] < lowestCost {
+				winner = cart
+				lowestCost = auctionMap[cart]
 			}
 		}
 
 		fmt.Println("Winner:", winner)
 
-		if winner == types.CART_ID {
-			Claim(bid.Order, types.CART_ID)
-
+		for cart := range auctionMap {
+			delete(auctionMap, cart)
 		}
 
 	}
