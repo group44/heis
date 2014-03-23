@@ -38,49 +38,30 @@ func ElevInit() int {
 	if IoInit() == 0 {
 		return 0
 	}
-
 	// Zero all floor button lamps
 	for i := 0; i < types.N_FLOORS; i++ {
 		if i != 0 {
 			ElevSetButtonLamp(BUTTON_CALL_DOWN, i, 0)
 		}
-
 		if i != types.N_FLOORS-1 {
 			ElevSetButtonLamp(BUTTON_CALL_UP, i, 0)
 		}
-
 		ElevSetButtonLamp(BUTTON_COMMAND, i, 0)
 	}
-
-	//Clear stop lamp, door open lamp, and set floor indicator to ground floor
-	ElevSetStopLamp(0) // sette inn så alle lys blir nullstilt??
+	ElevSetStopLamp(0)
 	ElevSetDoorOpenLamp(0)
 	ElevSetFloorIndicator(0)
 	lastSpeed = 0
-
 	for ElevGetFloorSensorSignal() == -1 {
-		ElevSetSpeed(-300) //speed??
+		ElevSetSpeed(-300)
 	}
-
 	ElevSetSpeed(0)
 	ElevInitLights()
 	// Return success
 	return 1
 }
 
-// Implement this
-/*
-func CheckError(err) {
-
-}
-*/
-
 func ElevSetSpeed(speed int) {
-	// In order to sharply stop the elevator, the direction bit is toggled
-	// before setting speed to zero.
-
-	// If to start (speed > 0)
-	// If to stop (speed == 0)
 	if speed > 0 {
 		IoClearBit(MOTORDIR)
 	} else if speed < 0 {
@@ -90,10 +71,7 @@ func ElevSetSpeed(speed int) {
 	} else if lastSpeed > 0 {
 		IoSetBit(MOTORDIR)
 	}
-
 	lastSpeed = speed
-	//Adjust this to get instant stop, higher value if it does't stop, lower value if
-	// it drives a little in the other direction before it stops
 	time.Sleep(10 * time.Millisecond)
 	// Write new setting to motor
 	IoWriteAnalog(MOTOR, 2048+4*int(math.Abs(float64(speed))))
@@ -113,16 +91,7 @@ func ElevGetFloorSensorSignal() int {
 	}
 }
 
-// Fiks assert
 func ElevGetButtonSignal(button types.ElevButtonTypeT, floor int) int {
-	// assert(floor >= 0);
-	//assert(floor < N_FLOORS);
-	//assert(!(button == BUTTON_CALL_UP && floor == N_FLOORS-1));
-	//assert(!(button == BUTTON_CALL_DOWN && floor == 0));
-	//assert( button == BUTTON_CALL_UP ||
-	//       button == BUTTON_CALL_DOWN ||
-	//       button == BUTTON_COMMAND);
-
 	if IoReadBit(buttonChannelMatrix[floor][button]) != 0 {
 		return 1
 	} else {
@@ -139,9 +108,6 @@ func ElevGetObstructionSignal() int {
 }
 
 func ElevSetFloorIndicator(floor int) {
-	// assert(floor >= 0);
-	// assert(floor < N_FLOORS);
-
 	// Binary encoding. One light must always be on.
 	switch floor {
 	case 0:
@@ -161,16 +127,6 @@ func ElevSetFloorIndicator(floor int) {
 }
 
 func ElevSetButtonLamp(button types.ElevButtonTypeT, floor, value int) {
-	/*
-			assert(floor >= 0);
-		    assert(floor < N_FLOORS);
-		    assert(!(button == BUTTON_CALL_UP && floor == N_FLOORS-1));
-		    assert(!(button == BUTTON_CALL_DOWN && floor == 0));
-		    assert( button == BUTTON_CALL_UP ||
-		            button == BUTTON_CALL_DOWN ||
-		            button == BUTTON_COMMAND);
-	*/
-
 	if value == 1 {
 		IoSetBit(lampChannelMatrix[floor][button])
 	} else {

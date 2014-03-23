@@ -13,7 +13,6 @@ import (
 )
 
 func main() {
-
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	done := make(chan bool)
@@ -21,7 +20,6 @@ func main() {
 	go order.Run()
 	go com.Run()
 	go elevator.Run()
-	
 
 	<-done
 	fmt.Println("End")

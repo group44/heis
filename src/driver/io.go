@@ -30,4 +30,3 @@ func IoReadBit(channel int) int {
 func IoReadAnalog(channel int) int {
 	return int(C.io_read_analog(C.int(channel)))
 }
-

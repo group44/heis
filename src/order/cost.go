@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-func Test() {
-	driver.IoReadBit(driver.MOTORDIR)
-}
-
-//Calculate the elevators cost for the order
 func CalculateCost(order []int) int {
 	cost := 0
 	var state int
@@ -25,8 +20,7 @@ func CalculateCost(order []int) int {
 	orderDir := order[1]
 	wdp := 3 //wrong direction punishment
 	rdr := 2 //right direction reward
-	wfm := 2 //wrong floor multiplier.
-
+	wfm := 3 //wrong floor multiplier.
 	floorDiff := wfm * (int(math.Abs(float64(elevatorCurrentFloor - orderFloor))))
 
 	if driver.ElevGetFloorSensorSignal() == -1 {
@@ -79,13 +73,13 @@ func CalculateCost(order []int) int {
 			switch elevatorDir {
 			case UP:
 				if orderDir == DOWN {
-					cost = cost + 5
+					cost = cost + wdp
 				}
 				cost = floorDiff + cost
 				break
 			case DOWN:
 				if orderDir == UP {
-					cost = cost + 5
+					cost = cost + wdp
 				}
 				cost = floorDiff + cost
 				break
@@ -99,22 +93,17 @@ func CalculateCost(order []int) int {
 	return cost
 }
 
-//function that handles cost enquireieieii
 func HandleCost() {
 	var cost int
 	order := make([]int, 2)
-
 	for {
 		order = <-com.OrderCh
 		cost = CalculateCost(order)
-		fmt.Println("Cost calculated and sent")
+		fmt.Println("Cost calculated and sent. cost:", cost)
 		com.OutputCh <- types.Data{Head: "cost", Order: order, Cost: cost}
 	}
-
 }
 
-// Initiates an "auction" to determine which cart that should dispatch an order.
-// Bids in range 0-10, consider changing this - goroutine
 func Auction(GlobalOrders types.GlobalTable) {
 	var winner int
 	var maxCost = 100
@@ -130,14 +119,9 @@ func Auction(GlobalOrders types.GlobalTable) {
 		bid = <-com.AuctionCh
 		com.PeerMap.Mu.Lock()
 
-		//hva gjør egentlig denne??
-
-		fmt.Println("len peermap")
-		fmt.Println(len(com.PeerMap.M))
-		fmt.Println("len carts")
-		fmt.Println(len(carts))
-
-		for !ContainsAll(carts) {
+		fmt.Println("len peermap:", len(com.PeerMap.M))
+		fmt.Println("len carts", len(carts))
+		for !ContainsAll(carts) && len(com.PeerMap.M) > 1 {
 			time.Sleep(50 * time.Millisecond)
 			//bid = <-com.AuctionCh
 
@@ -147,8 +131,7 @@ func Auction(GlobalOrders types.GlobalTable) {
 			if bid.Order[0] == currentOrder[0] && bid.Order[1] == currentOrder[1] {
 				carts[bid.ID-1] = bid.Cost
 			}
-			if !ContainsAll(carts) {
-				fmt.Println("1111111111111111")
+			if !ContainsAll(carts) && len(com.PeerMap.M) > 1 {
 				bid = <-com.AuctionCh
 			}
 			fmt.Println(carts)
@@ -165,8 +148,7 @@ func Auction(GlobalOrders types.GlobalTable) {
 			}
 		}
 
-		fmt.Println("WINNER:")
-		fmt.Println(winner)
+		fmt.Println("Winner:", winner)
 
 		if winner == types.CART_ID {
 			Claim(bid.Order, types.CART_ID)
@@ -176,14 +158,11 @@ func Auction(GlobalOrders types.GlobalTable) {
 	}
 }
 
-// Claims and order and marks it by setting it's own CART_ID in the ID field of the
-// global table. Should check if another ID is already set, and then not claim it, unless
-// the cart who has claimed it is dead.
-func Claim(order []int, winner int) { // order: [floor, dir, ID]
+func Claim(order []int, winner int) {
 	floor, dir := order[0], order[1]
 	data := types.Data{Head: "addorder"}
 	if GlobalOrders[floor][dir] == 0 {
-		fmt.Println("order has been claimed")
+		fmt.Println("order has been claimed. order:", order)
 		data.Order = order
 		data.WinnerId = winner
 		com.OutputCh <- data

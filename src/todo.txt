@@ -8,10 +8,12 @@
 
 * fikse check other floors
 ** Tror denne er fikset nå, men tiden vil vise etter hvert som vi får testet den mer
+** done
 
 * Redistribute må lages
 
 * Fikse check current floor
+** done
 
 
 

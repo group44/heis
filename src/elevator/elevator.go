@@ -33,86 +33,70 @@ var (
 	upCh             = make(chan bool)
 )
 
+// Starts the go routines and initializing of the elevator
 func Run() {
 
 	done := make(chan bool)
 	// Initialization
 	driver.ElevInit()
-
 	go FloorLights()
 	go DoorTimer()
-
 	elevatorDirection = DOWN
 	for driver.ElevGetFloorSensorSignal() == -1 {
 		driver.ElevSetSpeed(-SPEED)
 	}
 	driver.ElevSetSpeed(0)
-
 	go Idle()
 	go Open()
 	go Down()
 	go Up()
-
 	idleCh <- true
 	<-done
-	fmt.Println("The elevator program is turned off")
 }
 
+// Go routine for the idle state of the elevator
 func Idle() {
 	for {
-
 		<-idleCh
-
-		//fmt.Println("ENTERED IDLE")
-
+		fmt.Println("Idle state entered")
 		driver.ElevSetDoorOpenLamp(OFF)
-		driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
-
-		//fmt.Println(order.CheckCurrentFloor())
-		//fmt.Println(order.FindDirection())
-		for { //Her går den helt til den oppnår betingelsene for en ny state
+		driver.ElevSetSpeed(0)
+		for {
 			if order.CheckCurrentFloor() {
 				openCh <- true
 				break
-
-			} else if order.FindDirection() == 1 { // || order.FindDirection() == -1 {
+			} else if order.FindDirection() == 1 {
 				downCh <- true
 				break
 			} else if order.FindDirection() == 0 {
 				upCh <- true
 				break
 			}
-			time.Sleep(1000 * time.Millisecond)
 		}
-		//fmt.Println("IDLE END")
-
 	}
 }
 
+// Go routine for the open state of the elevator
+// open state is when the doors of the elevator are open
 func Open() {
 	for {
-
 		<-openCh
-		//fmt.Println("ENTERED OPEN")
-
-		driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
+		fmt.Println("Open state entered")
+		driver.ElevSetSpeed(0)
 		order.ClearOrder()
-
 		doorTimerStartCh <- true
 		<-doorTimerDoneCh
-		//time.Sleep(3000 * time.Millisecond)
 		idleCh <- true
-
 	}
 }
 
+// Go routine for the down state of the elevator
+// Down state is when the elevator is travelling down
 func Down() {
 	for {
-
 		<-downCh
-		//fmt.Println("ENTERED DOWN")
-
-		driver.ElevSetSpeed(-SPEED) // verdi?
+		fmt.Println("Down state entered")
+		driver.ElevSetSpeed(-SPEED)
 		elevatorDirection = DOWN
 		for {
 			if order.CheckCurrentFloor() {
@@ -126,14 +110,14 @@ func Down() {
 	}
 }
 
+// Go routine for the up state of the elevator
+// up state is when the elevator is travelling up
 func Up() {
 	for {
-
 		<-upCh
-		//fmt.Println("ENTERED UP")
+		fmt.Println("Up state entered")
 		elevatorDirection = UP
-		driver.ElevSetSpeed(SPEED) // verdi?
-
+		driver.ElevSetSpeed(SPEED)
 		for {
 			if order.CheckCurrentFloor() {
 				openCh <- true
@@ -144,9 +128,9 @@ func Up() {
 			}
 		}
 	}
-
 }
 
+// Go routine that sets the floor light indicators
 func FloorLights() {
 	for {
 		time.Sleep(1 * time.Millisecond)
@@ -154,7 +138,8 @@ func FloorLights() {
 	}
 }
 
-// Too make sure the elevator never drives over top floor or under bottom floor. Returns true if elevator reaches top floor or bottom floor without order there.
+// Checks if the elevator is about to travel over the top floor
+// or below the bottom floor
 func Safety() bool {
 	if driver.ElevGetFloorSensorSignal() == 0 && !order.CheckCurrentFloor() && elevatorDirection == DOWN {
 		return true
@@ -164,16 +149,13 @@ func Safety() bool {
 	return false
 }
 
+// Go routine for the door timer.
 func DoorTimer() {
 	for {
 		<-doorTimerStartCh
 		driver.ElevSetDoorOpenLamp(ON)
-		fmt.Println("Timer started")
 		time.Sleep(3000 * time.Millisecond)
-		fmt.Println("Timer done")
 		driver.ElevSetDoorOpenLamp(OFF)
-
 		doorTimerDoneCh <- true
 	}
-
 }

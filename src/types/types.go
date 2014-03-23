@@ -6,10 +6,9 @@ import (
 )
 
 const (
-	CART_ID   = 1
-	N_FLOORS  = 4
-	N_BUTTONS = 4
-
+	CART_ID         = 1
+	N_FLOORS        = 4
+	N_BUTTONS       = 4
 	NUMBER_OF_CARTS = 1
 
 	// Global timeout const
@@ -19,9 +18,8 @@ const (
 var ()
 
 type (
-	GlobalTable   [][]int
-	InternalTable []int
-
+	GlobalTable     [][]int
+	InternalTable   []int
 	ElevButtonTypeT int
 
 	// Map for storing addresses of peers in group

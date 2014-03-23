@@ -19,12 +19,8 @@ const (
 )
 
 var (
-
-	// Channel for signaling type of lights to be set, buffer = 2
-	UpdateLightCh = make(chan string)
-	//UpdateLightCh = make(chan string, 2)
-	Direction int
-
+	UpdateLightCh  = make(chan string, 5)
+	Direction      int
 	GlobalOrders   types.GlobalTable
 	InternalOrders types.InternalTable
 )
@@ -40,17 +36,15 @@ func Run() {
 	go UpdateInternalTable()
 	go UpdateLights()
 	ReadFile()
-	go CheckExternalButtons()
 	go Auction(GlobalOrders)
 	go AddOrder()
 	go HandleCost()
 	go RemoveOrder()
-	go PrintTable()
+	go PrintTables()
 	go PrintOrderDirection()
-	//go PrintTables()
+	go CheckExternalButtons()
 
 	<-done
-
 }
 
 func CheckError(err error) {
@@ -60,49 +54,40 @@ func CheckError(err error) {
 	}
 }
 
-// INTERNAL maa erstattes, vurder assert
-// Vurder navn paa denne, denne i en go routine?
 func UpdateInternalTable() {
-
 	for {
 		time.Sleep(10 * time.Millisecond)
 		for i := range InternalOrders {
 			if InternalOrders[i] != 1 {
 				if driver.ElevGetButtonSignal(INTERNAL, i) == 1 {
 					InternalOrders[i] = driver.ElevGetButtonSignal(INTERNAL, i)
-					//fmt.Println("Internal order table updated")
 					UpdateLightCh <- "internal"
 				}
 			}
 		}
 	}
-
 }
 
-// INTERNAL maa erstattes, vurder assert
-// Vurder navn paa denne
 func ClearOrder() {
 	floor := GetCurrentFloor()
 	dir := GetOrderDirection()
 	data := types.Data{Head: "removeorder"}
 
 	if floor < 0 || floor >= types.N_FLOORS {
-		// Assert here
 		fmt.Println("Invalid floor number")
 	}
 	if dir != 0 && dir != 1 {
-		// Assert here
 		fmt.Println("Invalid dir number")
 	}
 
 	InternalOrders[floor] = 0
 	data.Order = []int{floor, dir}
-	com.OutputCh <- data //sende ut på nettet at ordren skal fjernese fra tabellen
+	com.OutputCh <- data
 	UpdateLightCh <- "internal"
 	UpdateLightCh <- "global"
 }
 
-// ny funksjon, kan ikke skjønne at denne ikke skal fungere
+// Checks the floor the elevator is on for orders
 func CheckCurrentFloor() bool {
 	currentFloor := driver.ElevGetFloorSensorSignal()
 	dir := GetOrderDirection()
@@ -122,12 +107,13 @@ func CheckCurrentFloor() bool {
 	if currentFloor == -1 {
 		return false
 	}
+
 	if currentFloor != -1 && currentFloor < types.N_FLOORS {
 		if InternalOrders[currentFloor] == 1 {
 			return true
 		} else if GlobalOrders[currentFloor][dir] == types.CART_ID {
 			return true
-		} else if CheckCurrentFloor2() == false && GlobalOrders[currentFloor][oppDir] == types.CART_ID {
+		} else if CheckCurrentFloorHelper() == false && GlobalOrders[currentFloor][oppDir] == types.CART_ID {
 			ChangeOrderDirection(oppDir)
 			return true
 		}
@@ -135,7 +121,7 @@ func CheckCurrentFloor() bool {
 	return false
 }
 
-func CheckCurrentFloor2() bool {
+func CheckCurrentFloorHelper() bool {
 	currentFloor := GetCurrentFloor()
 	dir := GetOrderDirection()
 
@@ -164,13 +150,10 @@ func CheckCurrentFloor2() bool {
 				}
 			}
 		}
-
 	}
 	return false
 }
 
-// MonInternalOrdersors the external buttons on the carts own panel and sends a Data struct wInternalOrdersh order on
-// OutputCh if one is found. Runs in separate go routine.
 func CheckExternalButtons() {
 	data := types.Data{Head: "order"}
 
@@ -181,21 +164,16 @@ func CheckExternalButtons() {
 			if driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) != 0 {
 				data.Order = []int{i, 0}
 				com.OutputCh <- data
-
-				fmt.Println("Order created:")
-				//fmt.Println(data)
+				fmt.Println("Order created:", data.Order)
 				fmt.Println("")
-
 				for driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) == 1 {
 					time.Sleep(1 * time.Millisecond)
 				}
 			} else if driver.ElevGetButtonSignal(driver.BUTTON_CALL_DOWN, i) != 0 {
 				data.Order = []int{i, 1}
 				com.OutputCh <- data
-				fmt.Println("Order created:")
-				//fmt.Println(data)
+				fmt.Println("Order created:", data.Order)
 				fmt.Println("")
-
 				for driver.ElevGetButtonSignal(driver.BUTTON_CALL_DOWN, i) == 1 {
 					time.Sleep(1 * time.Millisecond)
 				}
@@ -205,7 +183,6 @@ func CheckExternalButtons() {
 
 }
 
-//kanskje endre navn. gir siste etasje den var i, eller fortsatt er i
 func GetCurrentFloor() int {
 	currentFloor := -1
 	x, y := driver.IoReadBit(driver.FLOOR_IND1), driver.IoReadBit(driver.FLOOR_IND2)
@@ -225,11 +202,9 @@ func GetCurrentFloor() int {
 			currentFloor = 3
 		}
 	}
-
 	return currentFloor
 }
 
-//skal bli forbedret funksjon som sjekker de andre etasjene og returnerer den nermeste ordren
 func CheckOtherFloors() int {
 	currentFloor := GetCurrentFloor()
 	dir := GetOrderDirection()
@@ -248,7 +223,6 @@ func CheckOtherFloors() int {
 				}
 			}
 		}
-
 		for floor := currentFloor; floor < types.N_FLOORS; floor++ {
 			if floor != currentFloor {
 				if GlobalOrders[floor][DOWN] == types.CART_ID {
@@ -265,7 +239,6 @@ func CheckOtherFloors() int {
 			}
 		}
 		ChangeOrderDirection(DOWN)
-		//fmt.Println("Order direction changed too DOWN")
 
 	case DOWN:
 		for floor := currentFloor; floor >= 0; floor-- {
@@ -291,7 +264,6 @@ func CheckOtherFloors() int {
 			}
 		}
 		ChangeOrderDirection(UP)
-		//fmt.Println("Order direction changed too UP")
 	}
 	return -1
 }
@@ -306,7 +278,7 @@ func GetOrderDirection() int {
 
 func PrintOrderDirection() {
 	for {
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(3000 * time.Millisecond)
 		dir := GetOrderDirection()
 		switch dir {
 		case UP:
@@ -332,37 +304,20 @@ func FindDirection() int {
 	}
 }
 
-func PrintTable() {
-	for {
-		time.Sleep(1000 * time.Millisecond)
-
-		fmt.Println("Internal:")
-		fmt.Println(InternalOrders)
-
-		fmt.Println("Global:")
-		fmt.Println(GlobalOrders)
-	}
-}
-
-//printer tabellen med 2 sek mellomrom
 func PrintTables() {
 	for {
-		fmt.Println("Internal:")
-		fmt.Println(InternalOrders)
-
-		fmt.Println("Global:")
-		fmt.Println(GlobalOrders)
-		time.Sleep(2000 * time.Millisecond)
+		time.Sleep(3000 * time.Millisecond)
+		fmt.Println("Internal:", InternalOrders)
+		fmt.Println("Global:", GlobalOrders)
 	}
 }
 
-// Sends out an order from the global table for a new auction. Called if a peer has disconnected and InternalOrders has
-// unfinished orders in the global table.
+// Checks if a peer is disconnected and sends the orders for that peer
+// out for a new auction to be executed by another peer
 func Redistribute() {
 
 }
 
-// In separate goroutine
 func UpdateLights() {
 	var msg string
 	for {
@@ -375,8 +330,6 @@ func UpdateLights() {
 				time.Sleep(1 * time.Millisecond)
 				driver.ElevSetLights(i, 2, InternalOrders[i])
 			}
-			//fmt.Println("Internal Lights updated")
-
 		case "global":
 
 			for j := 0; j < types.N_FLOORS; j++ {
@@ -389,11 +342,8 @@ func UpdateLights() {
 					}
 				}
 			}
-			//fmt.Println("Global Lights updated")
 		}
-
 	}
-
 }
 
 func Backup() {
@@ -415,8 +365,6 @@ func ReadFile() {
 	UpdateLightCh <- "internal"
 }
 
-// i denne må det leges til flere hvis heisen utvides til fler etasjer
-// denne virker ikke helt :(
 func WriteFile() {
 	msg := strconv.Itoa(InternalOrders[0]) + strconv.Itoa(InternalOrders[1]) + strconv.Itoa(InternalOrders[2]) + strconv.Itoa(InternalOrders[3])
 	buf := []byte(msg)
@@ -429,8 +377,6 @@ func check(e error) {
 	}
 }
 
-//add order to the global table
-//after order is added it sends the new table too be casted
 func AddOrder() {
 	var inc types.Data
 	var winnerId int
@@ -448,8 +394,6 @@ func AddOrder() {
 	}
 }
 
-//removes order from globaltable
-//after order is removed it sends the new table to be casted
 func RemoveOrder() {
 	order := make([]int, 2)
 	for {
