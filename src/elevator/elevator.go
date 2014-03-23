@@ -107,9 +107,9 @@ func Open() {
 		driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
 		order.ClearOrder()
 
-		//doorTimerStartCh <- true
-		//<-doorTimerDoneCh
-		time.Sleep(3000 * time.Millisecond)
+		doorTimerStartCh <- true
+		<-doorTimerDoneCh
+		//time.Sleep(3000 * time.Millisecond)
 		idleCh <- true
 
 	}
