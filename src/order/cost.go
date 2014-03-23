@@ -139,7 +139,6 @@ func Auction(GlobalOrders types.GlobalTable) {
 
 		for !ContainsAll(carts) {
 			time.Sleep(50 * time.Millisecond)
-			fmt.Println("kommer vi hertil?44444")
 			//bid = <-com.AuctionCh
 
 			if currentOrder[0] == -1 {
@@ -149,16 +148,15 @@ func Auction(GlobalOrders types.GlobalTable) {
 				carts[bid.ID-1] = bid.Cost
 			}
 			if !ContainsAll(carts) {
+				fmt.Println("1111111111111111")
 				bid = <-com.AuctionCh
 			}
 			fmt.Println(carts)
 		}
 
-		fmt.Println("kommer vi hertil?11111")
 		currentOrder[0] = -1
 		com.PeerMap.Mu.Unlock()
 
-		fmt.Println("kommer vi hertil?222222")
 		// This may cause two or more elevators to claim the same order (if they have equal cost
 		for i := 0; i < len(carts); i++ {
 			if carts[i] < maxCost {

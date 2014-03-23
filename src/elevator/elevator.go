@@ -149,7 +149,7 @@ func Up() {
 
 func FloorLights() {
 	for {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 		driver.ElevSetFloorIndicator(driver.ElevGetFloorSensorSignal())
 	}
 }

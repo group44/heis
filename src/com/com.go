@@ -108,15 +108,14 @@ func UpdatePeerMap(p *types.PeerMap) {
 	var id int
 
 	for {
-		fmt.Println("111111111")
+
 		time.Sleep(100 * time.Millisecond)
 		id = <-peerCh
-		fmt.Println("2222222222")
 
 		//p.Mu.Lock()
 		p.M[id] = time.Now()
 		//p.Mu.Unlock()
-		fmt.Println("3333333")
+
 		fmt.Println(PeerMap)
 	}
 
@@ -139,14 +138,11 @@ func ReceiveData(conn *net.UDPConn) {
 
 		//fmt.Println("in:")
 		//fmt.Println(inc)
-		fmt.Println("her er vi")
 		if inc.ID > 0 {
 			// update peermap
 			peerCh <- inc.ID // c1
 		}
-		fmt.Println("her vil vi")
 
-		fmt.Println("FØØØØØØØØØØØØØØØØØØØØØØØØØØØRRRR SWITCHEN")
 		fmt.Println(inc.Head)
 		switch inc.Head {
 
@@ -168,10 +164,8 @@ func ReceiveData(conn *net.UDPConn) {
 			}
 
 		case "cost":
-			fmt.Println("FØØØRRR")
 			fmt.Println(inc)
 			AuctionCh <- inc
-			fmt.Println("ETEEEEETETETET")
 			//fmt.Println(inc)
 			//fmt.Println(AuctionCh)
 			fmt.Println("Cost received:")
@@ -186,7 +180,6 @@ func ReceiveData(conn *net.UDPConn) {
 
 		case "removeorder":
 			RemoveOrderCh <- inc.Order
-			fmt.Println("er det her vi aldri kommer inn??")
 			fmt.Println("Order removed:")
 			fmt.Println(inc.Order)
 			fmt.Println("")

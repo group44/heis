@@ -45,6 +45,8 @@ func Run() {
 	go AddOrder()
 	go HandleCost()
 	go RemoveOrder()
+	go PrintTable()
+	go PrintOrderDirection()
 	//go PrintTables()
 
 	<-done
@@ -80,11 +82,9 @@ func UpdateInternalTable() {
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne
 func ClearOrder() {
-	floor := driver.ElevGetFloorSensorSignal()
+	floor := GetCurrentFloor()
 	dir := GetOrderDirection()
 	data := types.Data{Head: "removeorder"}
-	fmt.Println("hva står det her??")
-	fmt.Println(data)
 
 	if floor < 0 || floor >= types.N_FLOORS {
 		// Assert here
@@ -97,11 +97,7 @@ func ClearOrder() {
 
 	InternalOrders[floor] = 0
 	data.Order = []int{floor, dir}
-	fmt.Println("hva står det nå da?")
-	fmt.Println(data)
-
 	com.OutputCh <- data //sende ut på nettet at ordren skal fjernese fra tabellen
-
 	UpdateLightCh <- "internal"
 	UpdateLightCh <- "global"
 }
@@ -110,6 +106,13 @@ func ClearOrder() {
 func CheckCurrentFloor() bool {
 	currentFloor := driver.ElevGetFloorSensorSignal()
 	dir := GetOrderDirection()
+	var oppDir int
+	if dir == UP {
+		oppDir = DOWN
+	} else if dir == DOWN {
+		oppDir = UP
+	}
+
 	if currentFloor == 0 {
 		ChangeOrderDirection(UP)
 	} else if currentFloor == (types.N_FLOORS - 1) {
@@ -124,7 +127,44 @@ func CheckCurrentFloor() bool {
 			return true
 		} else if GlobalOrders[currentFloor][dir] == types.CART_ID {
 			return true
+		} else if CheckCurrentFloor2() == false && GlobalOrders[currentFloor][oppDir] == types.CART_ID {
+			ChangeOrderDirection(oppDir)
+			return true
 		}
+	}
+	return false
+}
+
+func CheckCurrentFloor2() bool {
+	currentFloor := GetCurrentFloor()
+	dir := GetOrderDirection()
+
+	if currentFloor != -1 {
+		switch dir {
+		case UP:
+			for i := currentFloor; i < types.N_FLOORS; i++ {
+				if GlobalOrders[i][UP] == types.CART_ID {
+					return true
+				}
+			}
+			for j := types.N_FLOORS - 1; j > currentFloor; j-- {
+				if GlobalOrders[j][DOWN] == types.CART_ID {
+					return true
+				}
+			}
+		case DOWN:
+			for k := currentFloor; k >= 0; k-- {
+				if GlobalOrders[k][DOWN] == types.CART_ID {
+					return true
+				}
+			}
+			for l := 0; l < currentFloor; l++ {
+				if GlobalOrders[l][UP] == types.CART_ID {
+					return true
+				}
+			}
+		}
+
 	}
 	return false
 }
@@ -165,6 +205,7 @@ func CheckExternalButtons() {
 
 }
 
+//kanskje endre navn. gir siste etasje den var i, eller fortsatt er i
 func GetCurrentFloor() int {
 	currentFloor := -1
 	x, y := driver.IoReadBit(driver.FLOOR_IND1), driver.IoReadBit(driver.FLOOR_IND2)
@@ -207,19 +248,18 @@ func CheckOtherFloors() int {
 				}
 			}
 		}
-		for floor := currentFloor; floor >= 0; floor-- {
+
+		for floor := currentFloor; floor < types.N_FLOORS; floor++ {
 			if floor != currentFloor {
-				if GlobalOrders[floor][UP] == types.CART_ID {
-					return floor
-				} else if InternalOrders[floor] == 1 {
-					ChangeOrderDirection(DOWN)
+				if GlobalOrders[floor][DOWN] == types.CART_ID {
 					return floor
 				}
 			}
 		}
-		for floor := currentFloor; floor < types.N_FLOORS; floor++ {
+		for floor := currentFloor; floor >= 0; floor-- {
 			if floor != currentFloor {
-				if GlobalOrders[floor][DOWN] == types.CART_ID {
+				if InternalOrders[floor] == 1 {
+					ChangeOrderDirection(DOWN)
 					return floor
 				}
 			}
@@ -235,20 +275,17 @@ func CheckOtherFloors() int {
 				}
 			}
 		}
-
-		for floor := currentFloor; floor < types.N_FLOORS; floor++ {
+		for floor := currentFloor; floor >= 0; floor-- {
 			if floor != currentFloor {
-				if GlobalOrders[floor][DOWN] == types.CART_ID {
-					return floor
-				} else if InternalOrders[floor] == 1 {
-					ChangeOrderDirection(UP)
+				if GlobalOrders[floor][UP] == types.CART_ID {
 					return floor
 				}
 			}
 		}
-		for floor := currentFloor; floor >= 0; floor-- {
+		for floor := currentFloor; floor < types.N_FLOORS; floor++ {
 			if floor != currentFloor {
-				if GlobalOrders[floor][UP] == types.CART_ID {
+				if InternalOrders[floor] == 1 {
+					ChangeOrderDirection(UP)
 					return floor
 				}
 			}
@@ -268,12 +305,15 @@ func GetOrderDirection() int {
 }
 
 func PrintOrderDirection() {
-	dir := GetOrderDirection()
-	switch dir {
-	case UP:
-		fmt.Println("Order direction: UP")
-	case DOWN:
-		fmt.Println("Order direction: DOWN")
+	for {
+		time.Sleep(1000 * time.Millisecond)
+		dir := GetOrderDirection()
+		switch dir {
+		case UP:
+			fmt.Println("Order direction: UP")
+		case DOWN:
+			fmt.Println("Order direction: DOWN")
+		}
 	}
 }
 
@@ -293,12 +333,15 @@ func FindDirection() int {
 }
 
 func PrintTable() {
+	for {
+		time.Sleep(1000 * time.Millisecond)
 
-	fmt.Println("Internal:")
-	fmt.Println(InternalOrders)
+		fmt.Println("Internal:")
+		fmt.Println(InternalOrders)
 
-	fmt.Println("Global:")
-	fmt.Println(GlobalOrders)
+		fmt.Println("Global:")
+		fmt.Println(GlobalOrders)
+	}
 }
 
 //printer tabellen med 2 sek mellomrom
@@ -410,9 +453,7 @@ func AddOrder() {
 func RemoveOrder() {
 	order := make([]int, 2)
 	for {
-		fmt.Println("her er vi inne i removeorder")
 		order = <-com.RemoveOrderCh
-		fmt.Println("her har vi mottat fra channel")
 		GlobalOrders[order[0]][order[1]] = 0
 		com.OutputCh <- types.Data{Head: "table", Order: order, Table: GlobalOrders}
 		fmt.Println("new global table removed:")

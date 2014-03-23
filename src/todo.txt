@@ -11,6 +11,8 @@
 
 * Redistribute må lages
 
+* Fikse check current floor
+
 
 
 order flow
