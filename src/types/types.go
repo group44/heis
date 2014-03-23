@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	CART_ID   = 2
+	CART_ID   = 1
 	N_FLOORS  = 4
 	N_BUTTONS = 4
 
-	NUMBER_OF_CARTS = 2
+	NUMBER_OF_CARTS = 1
 
 	// Global timeout const
 	TIMEOUT = 1 * time.Second
@@ -32,12 +32,13 @@ type (
 
 	// Struct for sending data over network
 	Data struct {
-		Head  string
-		Order []int
-		Table [][]int
-		Cost  int
-		ID    int
-		T     time.Time
+		Head     string
+		Order    []int
+		Table    [][]int
+		Cost     int
+		ID       int
+		WinnerId int
+		T        time.Time
 	}
 )
 

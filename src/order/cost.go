@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	//"math"
-	"time"
+	//"time"
 )
 
 func TestDistribute() {
@@ -125,7 +125,7 @@ func CalculateCost() {
 // Bids in range 0-10, consider changing this - goroutine
 func Auction(GlobalOrders types.GlobalTable) {
 	var winner int
-	var maxCost = 10
+	var maxCost = 100
 	var bid types.Data
 	var currentOrder = make([]int, 2)
 	currentOrder[0], currentOrder[1] = -1, -1
@@ -134,26 +134,32 @@ func Auction(GlobalOrders types.GlobalTable) {
 	for {
 
 		//fmt.Println(currentOrder)
-		time.Sleep(10 * time.Millisecond)
+		//hva skal komme inn her? går det til cost først eller til denne først?
+
 		bid = <-com.AuctionCh
+		//bid = <-com.OrderCh
 
 		if currentOrder[0] == -1 {
 			copy(currentOrder, bid.Order)
 		}
-
+		fmt.Println("kommer vi hertil?44444")
 		com.PeerMap.Mu.Lock()
-		for len(carts) < len(com.PeerMap.M)+1 {
-			time.Sleep(50 * time.Millisecond)
-			if bid.Order[0] == currentOrder[0] && bid.Order[1] == currentOrder[1] {
-				carts[bid.ID-1] = bid.Cost
-			}
-			bid = <-com.AuctionCh
+		fmt.Println("kommer vi hertil?3333333")
+		//hva gjør egentlig denne??
+		/*
+			for len(carts) < len(com.PeerMap.M)+1 {
+				time.Sleep(50 * time.Millisecond)
+				if bid.Order[0] == currentOrder[0] && bid.Order[1] == currentOrder[1] {
+					carts[bid.ID-1] = bid.Cost
+				}
+				//bid = <-com.AuctionCh
 
-		}
-
+			}*/
+		fmt.Println("kommer vi hertil?11111")
 		currentOrder[0] = -1
 		com.PeerMap.Mu.Unlock()
 
+		fmt.Println("kommer vi hertil?222222")
 		// This may cause two or more elevators to claim the same order (if they have equal cost
 		for i := 0; i < len(carts); i++ {
 			if carts[i] < maxCost {
@@ -166,7 +172,7 @@ func Auction(GlobalOrders types.GlobalTable) {
 		fmt.Println(winner)
 
 		if winner == types.CART_ID {
-			Claim(bid.Order, GlobalOrders)
+			Claim(bid.Order, types.CART_ID)
 
 		}
 
@@ -176,8 +182,8 @@ func Auction(GlobalOrders types.GlobalTable) {
 // Claims and order and marks it by setting it's own CART_ID in the ID field of the
 // global table. Should check if another ID is already set, and then not claim it, unless
 // the cart who has claimed it is dead.
-func Claim(order []int, table types.GlobalTable) { // order: [floor, dir, ID]
-	floor, dir := order[0], order[1]
+func Claim(order []int, winner int) { // order: [floor, dir, ID]
+	/*floor, dir := order[0], order[1]
 	if table[floor][dir] == 0 {
 		table[floor][dir] = types.CART_ID
 		outData := types.Data{Head: "table", Table: table}
@@ -186,12 +192,22 @@ func Claim(order []int, table types.GlobalTable) { // order: [floor, dir, ID]
 		fmt.Println("Sending Output from Claim")
 		com.OutputCh <- outData
 
-		/*
+
 			fmt.Println("Table casted:")
 			fmt.Println(outData)
 			fmt.Println("")
-		*/
+
+	}*/
+	floor, dir := order[0], order[1]
+	data := types.Data{Head: "addorder"}
+	if GlobalOrders[floor][dir] == 0 {
+		fmt.Println("order has been claimed")
+		data.Order = order
+		data.WinnerId = winner
+		com.OutputCh <- data
+
 	}
+
 }
 
 // Removes a successfully dispatched order from the global table

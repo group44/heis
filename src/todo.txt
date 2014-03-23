@@ -1,0 +1,42 @@
+** liste over ting som må gjøres**
+
+
+* fikse cost
+
+* fikse auction !! viktig, denne må fikses for å få fler heiser til å kunne kjøre sammen
+
+* fikse check other floors
+
+*
+
+
+
+order flow
+
+new order
+orderflow er nå i orden, auction er jeg ikke sikker på hva gjør eller om den virker
+
+-> order to be cost evaluated **denne delen virker, trenger bare bedre cost funksjon
+
+-> cost to be compared auction **costen blir sendt til auction, men hva som skjer der aner jeg ikke
+
+//hvordan blir alle cost verdiene lagret? 
+//og hvordan blir de sammenlignet?
+
+-> when winner is decided send to add order ** denne delen virker
+
+-> when order is executed send to remove order **denne delen virker
+
+
+
+
+
+
+
+
+
+
+
+
+
+

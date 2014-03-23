@@ -22,8 +22,8 @@ const (
 var (
 
 	// Global channels sjekke om alle er i bruk
-	SafetyFloorCh       = make(chan bool)
 	ElevatorDirectionCh = make(chan string)
+	elevatorDirection   int
 
 	// Local channels
 	doorTimerStartCh = make(chan bool)
@@ -41,8 +41,9 @@ func Run() {
 	driver.ElevInit()
 
 	go FloorLights()
-	go SetDoorTimer()
+	go DoorTimer()
 
+	elevatorDirection = DOWN
 	for driver.ElevGetFloorSensorSignal() == -1 {
 		driver.ElevSetSpeed(-SPEED)
 	}
@@ -54,16 +55,8 @@ func Run() {
 	go Up()
 
 	idleCh <- true
-
-	//Safety go routine
-	//go Safety()
-	//Door timer go routine
-	//Selveste statemaskinen
-
-	//ControlStateMachine()
-	//order.UpdateLocalTable(order.LocalOrders, order.C1)
-
 	<-done
+	fmt.Println("The elevator program is turned off")
 
 }
 
@@ -122,13 +115,16 @@ func Down() {
 		//fmt.Println("ENTERED DOWN")
 
 		driver.ElevSetSpeed(-SPEED) // verdi?
-
-		for !order.CheckCurrentFloor() {
-			time.Sleep(100 * time.Millisecond)
+		elevatorDirection = DOWN
+		for {
+			if order.CheckCurrentFloor() {
+				openCh <- true
+				break
+			} else if Safety() {
+				idleCh <- true
+				break
+			}
 		}
-
-		openCh <- true
-
 	}
 }
 
@@ -137,135 +133,40 @@ func Up() {
 
 		<-upCh
 		//fmt.Println("ENTERED UP")
-
+		elevatorDirection = UP
 		driver.ElevSetSpeed(SPEED) // verdi?
 
-		for !order.CheckCurrentFloor() {
-			time.Sleep(100 * time.Millisecond)
-		}
-
-		openCh <- true
-
-	}
-
-}
-
-// Old state machine
-/*
-func ControlStateMachine() {
-
-	for {
-
-		time.Sleep(100 * time.Millisecond)
-
-		switch state {
-
-		case IDLE:
+		for {
 			if order.CheckCurrentFloor() {
-				nextstate = OPEN
-				fmt.Println("opentest")
-			} else if order.FindDirection() == 1 {
-				nextstate = DOWN
-			} else if order.FindDirection() == 0 {
-				nextstate = UP
-			}
-			break
-
-		case OPEN:
-			// if true
-			// timer ferdig
-			//in the ghetto timer
-			doorTimerCh = <- true
-			<-doorTimerCh
-			nextstate = IDLE
-			break
-
-		case UP:
-			if order.CheckCurrentFloor() {
-				nextstate = OPEN
-			} // else if <-SafetyFloorCh {
-			//	nextstate = IDLE
-			//}
-			break
-
-		case DOWN:
-			if order.CheckCurrentFloor() {
-				nextstate = OPEN
-			} // else if <-SafetyFloorCh {
-			//nextstate = IDLE
-			//}
-			break
-
-		default:
-			break
-
-		}
-
-		if state != nextstate {
-
-			fmt.Println(state, nextstate)
-			order.PrintTable()
-			order.PrintOrderDirection()
-
-			switch nextstate {
-
-			case IDLE:
-				driver.ElevSetDoorOpenLamp(OFF)
-				driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
+				openCh <- true
 				break
-
-			case OPEN:
-				driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
-
-				order.ClearOrder()
-				break
-
-			case UP:
-				//driver.ElevSetDoorOpenLamp(OFF)
-				driver.ElevSetSpeed(300) // verdi?
-				break
-
-			case DOWN:
-				//driver.ElevSetDoorOpenLamp(OFF)
-				driver.ElevSetSpeed(-300) // verdi?
-				break
-
-			default:
+			} else if Safety() {
+				idleCh <- true
 				break
 			}
 		}
-
-		state = nextstate
 	}
+
 }
-*/
 
 func FloorLights() {
-
 	for {
 		time.Sleep(100 * time.Millisecond)
 		driver.ElevSetFloorIndicator(driver.ElevGetFloorSensorSignal())
 	}
-
 }
 
 // Kjores i go routine, kan endre channel til string og legge til flere safety ting som nodstopp og obs her lett
-func Safety() {
-
-	for {
-		if driver.ElevGetFloorSensorSignal() == 0 && !order.CheckCurrentFloor() {
-			//skriv til channel
-			SafetyFloorCh <- true
-		} else if driver.ElevGetFloorSensorSignal() == (types.N_FLOORS-1) && !(order.CheckCurrentFloor()) {
-			//skriv til channel
-			SafetyFloorCh <- true
-		} else {
-			SafetyFloorCh <- false
-		}
+func Safety() bool {
+	if driver.ElevGetFloorSensorSignal() == 0 && !order.CheckCurrentFloor() && elevatorDirection == DOWN {
+		return true
+	} else if driver.ElevGetFloorSensorSignal() == (types.N_FLOORS-1) && !(order.CheckCurrentFloor()) && elevatorDirection == UP {
+		return true
 	}
+	return false
 }
 
-func SetDoorTimer() {
+func DoorTimer() {
 
 	for {
 		<-doorTimerStartCh

@@ -167,7 +167,7 @@ func CheckCurrentFloor() bool {
 // MonInternalOrdersors the external buttons on the carts own panel and sends a Data struct wInternalOrdersh order on
 // OutputCh if one is found. Runs in separate go routine.
 func CheckExternalButtons() {
-	data := types.Data{Head: "addorder"}
+	data := types.Data{Head: "order"}
 
 	for {
 		time.Sleep(10 * time.Millisecond)
@@ -247,6 +247,12 @@ func GetCurrentFloor() int {
 func CheckOtherFloors() int {
 	currentFloor := GetCurrentFloor()
 	dir := GetOrderDirection()
+	if currentFloor == 0 {
+		ChangeOrderDirection(UP)
+	} else if currentFloor == (types.N_FLOORS - 1) {
+		ChangeOrderDirection(DOWN)
+	}
+
 	switch dir {
 	case UP:
 		for floor := currentFloor; floor < types.N_FLOORS; floor++ {
@@ -427,13 +433,13 @@ func check(e error) {
 //after order is added it sends the new table too be casted
 func AddOrder() {
 	var inc types.Data
-	var id int
+	var winnerId int
 	order := make([]int, 2)
 	for {
 		inc = <-com.AddOrderCh
 		order = inc.Order
-		id = inc.ID
-		GlobalOrders[order[0]][order[1]] = id
+		winnerId = inc.WinnerId
+		GlobalOrders[order[0]][order[1]] = winnerId
 		com.OutputCh <- types.Data{Head: "table", Order: order, Table: GlobalOrders}
 		fmt.Println("new global table:")
 		fmt.Println(GlobalOrders)
