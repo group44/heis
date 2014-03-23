@@ -21,7 +21,7 @@ const (
 
 var (
 
-	// Global channels
+	// Global channels sjekke om alle er i bruk
 	SafetyFloorCh       = make(chan bool)
 	ElevatorDirectionCh = make(chan string)
 
