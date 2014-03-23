@@ -91,7 +91,7 @@ func Idle() {
 				upCh <- true
 				break
 			}
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 		}
 		//fmt.Println("IDLE END")
 
@@ -107,8 +107,9 @@ func Open() {
 		driver.ElevSetSpeed(0) // Maa haandtere braastopp-tingen
 		order.ClearOrder()
 
-		doorTimerStartCh <- true
-		<-doorTimerDoneCh
+		//doorTimerStartCh <- true
+		//<-doorTimerDoneCh
+		time.Sleep(3000 * time.Millisecond)
 		idleCh <- true
 
 	}

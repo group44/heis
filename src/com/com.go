@@ -16,10 +16,13 @@ var (
 	PeerMap = NewPeerMap()
 
 	// Global channels
-	OutputCh  = make(chan types.Data)
-	OrderCh   = make(chan []int)
-	TableCh   = make(chan types.GlobalTable)
-	AuctionCh = make(chan types.Data)
+	OutputCh            = make(chan types.Data)
+	OrderCh             = make(chan []int)
+	TableCh             = make(chan types.GlobalTable)
+	AuctionCh           = make(chan types.Data)
+	AddOrderCh          = make(chan types.Data)
+	RemoveOrderCh       = make(chan []int, 5)
+	UpdateGlobalTableCh = make(chan types.GlobalTable)
 
 	// Local channels
 	peerCh = make(chan int)
@@ -124,11 +127,12 @@ func ReceiveData(conn *net.UDPConn) {
 
 	for {
 		time.Sleep(100 * time.Millisecond)
-
 		n, _, err := conn.ReadFromUDP(b)
 		CheckError(err)
 		err = json.Unmarshal(b[:n], &inc)
 		CheckError(err)
+		fmt.Println("her er det vi har motatt:")
+		fmt.Println(inc)
 
 		//fmt.Println("in:")
 		//fmt.Println(inc)
@@ -138,13 +142,14 @@ func ReceiveData(conn *net.UDPConn) {
 			peerCh <- inc.ID // c1
 		}
 
+		fmt.Println("FØØØØØØØØØØØØØØØØØØØØØØØØØØØRRRR SWITCHEN")
+		fmt.Println(inc.Head)
 		switch inc.Head {
 
 		case "order":
 			fmt.Println("Order received:")
 			//fmt.Println(inc.Order)
 			fmt.Println("")
-
 			OrderCh <- inc.Order
 
 		case "table":
@@ -152,19 +157,30 @@ func ReceiveData(conn *net.UDPConn) {
 				fmt.Println("Table received")
 				//fmt.Println(inc.Table)
 				fmt.Println("")
-
-				TableCh <- inc.Table
+				//TableCh <- inc.Table
+				fmt.Println("kommer vi hertil??????")
 
 			}
 
 		case "cost":
-			//fmt.Println(inc)
 			AuctionCh <- inc
-
+			//fmt.Println(inc)
 			//fmt.Println(AuctionCh)
-
 			fmt.Println("Cost received:")
 			//fmt.Println(inc)
+			fmt.Println("")
+
+		case "addorder":
+			AddOrderCh <- inc
+			fmt.Println("Order added:")
+			fmt.Println(inc.Order)
+			fmt.Println("")
+
+		case "removeorder":
+			RemoveOrderCh <- inc.Order
+			fmt.Println("er det her vi aldri kommer inn??")
+			fmt.Println("Order removed:")
+			fmt.Println(inc.Order)
 			fmt.Println("")
 
 		default:
@@ -187,6 +203,7 @@ func CastData(conn *net.UDPConn) {
 		data.ID = types.CART_ID
 		data.T = time.Now()
 		fmt.Println("out:")
+		fmt.Println("Dette er det vi caster!")
 		fmt.Println(data)
 		b := make([]byte, 1024)
 		b, err = json.Marshal(data)

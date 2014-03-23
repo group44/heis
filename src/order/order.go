@@ -43,7 +43,9 @@ func Run() {
 	go CheckExternalButtons()
 	go CalculateCost()
 	go Auction(GlobalOrders)
-	go UpdateGlobalTable()
+	//go UpdateGlobalTable()
+	go AddOrder()
+	go RemoveOrder()
 	//go PrintTables()
 
 	<-done
@@ -80,7 +82,7 @@ func UpdateInternalTable() {
 		for i := range InternalOrders {
 			if InternalOrders[i] != 1 {
 				if driver.ElevGetButtonSignal(INTERNAL, i) == 1 {
-					//InternalOrders[i] = driver.ElevGetButtonSignal(INTERNAL, i)
+					InternalOrders[i] = driver.ElevGetButtonSignal(INTERNAL, i)
 					//fmt.Println("Internal order table updated")
 					UpdateLightCh <- "internal"
 				}
@@ -90,7 +92,8 @@ func UpdateInternalTable() {
 
 }
 
-func UpdateGlobalTable() {
+//Denne er kanskje unødvendig nå?!?!?!?!?!?!?!?!?!?!?!??
+/*func UpdateGlobalTable() {
 
 	for {
 		time.Sleep(10 * time.Millisecond)
@@ -100,13 +103,16 @@ func UpdateGlobalTable() {
 		UpdateLightCh <- "global"
 	}
 
-}
+}*/
 
 // INTERNAL maa erstattes, vurder assert
 // Vurder navn paa denne
 func ClearOrder() {
 	floor := driver.ElevGetFloorSensorSignal()
 	dir := GetOrderDirection()
+	data := types.Data{Head: "removeorder"}
+	fmt.Println("hva står det her??")
+	fmt.Println(data)
 
 	if floor < 0 || floor >= types.N_FLOORS {
 		// Assert here
@@ -117,7 +123,13 @@ func ClearOrder() {
 		fmt.Println("Invalid dir number")
 	}
 
-	InternalOrders[floor], GlobalOrders[floor][dir] = 0, 0
+	InternalOrders[floor] = 0
+	data.Order = []int{floor, dir}
+	fmt.Println("hva står det nå da?")
+	fmt.Println(data)
+
+	com.OutputCh <- data //sende ut på nettet at ordren skal fjernese fra tabellen
+
 	UpdateLightCh <- "internal"
 	UpdateLightCh <- "global"
 }
@@ -155,7 +167,7 @@ func CheckCurrentFloor() bool {
 // MonInternalOrdersors the external buttons on the carts own panel and sends a Data struct wInternalOrdersh order on
 // OutputCh if one is found. Runs in separate go routine.
 func CheckExternalButtons() {
-	data := types.Data{Head: "order"}
+	data := types.Data{Head: "addorder"}
 
 	for {
 		time.Sleep(10 * time.Millisecond)
@@ -175,6 +187,8 @@ func CheckExternalButtons() {
 			} else if driver.ElevGetButtonSignal(driver.BUTTON_CALL_DOWN, i) != 0 {
 				data.Order = []int{i, 1}
 				com.OutputCh <- data
+				//com.OutputCh <- types.Data{Head: "addorder", Order: order, Cost: cost, Table: GlobalOrders}
+				//com.AddOrderCh <- data
 
 				fmt.Println("Order created:")
 				//fmt.Println(data)
@@ -408,3 +422,52 @@ func check(e error) {
 		panic(e)
 	}
 }
+
+//add order to the global table, must be fixed for the right cart number
+//after order is added it sends the new table too be casted
+func AddOrder() {
+	var inc types.Data
+	var id int
+	order := make([]int, 2)
+	for {
+		inc = <-com.AddOrderCh
+		order = inc.Order
+		id = inc.ID
+		GlobalOrders[order[0]][order[1]] = id
+		com.OutputCh <- types.Data{Head: "table", Order: order, Table: GlobalOrders}
+		fmt.Println("new global table:")
+		fmt.Println(GlobalOrders)
+		UpdateLightCh <- "global"
+		time.Sleep(25 * time.Millisecond)
+	}
+}
+
+//removes order from globaltable, must be fixed for right cart number?
+//after order is removed it sends the new table to be casted
+func RemoveOrder() {
+	order := make([]int, 2)
+	for {
+		fmt.Println("her er vi inne i removeorder")
+		order = <-com.RemoveOrderCh
+		fmt.Println("her har vi mottat fra channel")
+		GlobalOrders[order[0]][order[1]] = 0
+		com.OutputCh <- types.Data{Head: "table", Order: order, Table: GlobalOrders}
+		fmt.Println("new global table removed:")
+		fmt.Println(GlobalOrders)
+		UpdateLightCh <- "global"
+		time.Sleep(25 * time.Millisecond)
+	}
+}
+
+//takes the casted table and updates the global table so all elevators have the same globaltable
+/*
+func UpdateGlobalTable() {
+	var tempTable = types.NewGlobalTable()
+	for {
+		tempTable = <-com.UpdateGlobalTableCh
+		GlobalOrders = tempTable
+		time.Sleep(25 * time.Millisecond)
+
+	}
+}
+*/
