@@ -7,7 +7,7 @@ import (
 	"fmt"
 	//"math/rand"
 	"math"
-	//"time"
+	"time"
 )
 
 func Test() {
@@ -23,7 +23,7 @@ func CalculateCost(order []int) int {
 	elevatorCurrentFloor := GetCurrentFloor()
 	orderFloor := order[0]
 	orderDir := order[1]
-	wdp := 2 //wrong direction punishment
+	wdp := 3 //wrong direction punishment
 	rdr := 2 //right direction reward
 	wfm := 2 //wrong floor multiplier.
 
@@ -93,6 +93,9 @@ func CalculateCost(order []int) int {
 			break
 		}
 	}
+	if cost < 0 {
+		return 0
+	}
 	return cost
 }
 
@@ -124,26 +127,33 @@ func Auction(GlobalOrders types.GlobalTable) {
 
 		//fmt.Println(currentOrder)
 		//hva skal komme inn her? går det til cost først eller til denne først?
-
 		bid = <-com.AuctionCh
-		//bid = <-com.OrderCh
-
-		if currentOrder[0] == -1 {
-			copy(currentOrder, bid.Order)
-		}
-		fmt.Println("kommer vi hertil?44444")
 		com.PeerMap.Mu.Lock()
-		fmt.Println("kommer vi hertil?3333333")
-		//hva gjør egentlig denne??
-		/*
-			for len(carts) < len(com.PeerMap.M)+1 {
-				time.Sleep(50 * time.Millisecond)
-				if bid.Order[0] == currentOrder[0] && bid.Order[1] == currentOrder[1] {
-					carts[bid.ID-1] = bid.Cost
-				}
-				//bid = <-com.AuctionCh
 
-			}*/
+		//hva gjør egentlig denne??
+
+		fmt.Println("len peermap")
+		fmt.Println(len(com.PeerMap.M))
+		fmt.Println("len carts")
+		fmt.Println(len(carts))
+
+		for !ContainsAll(carts) {
+			time.Sleep(50 * time.Millisecond)
+			fmt.Println("kommer vi hertil?44444")
+			//bid = <-com.AuctionCh
+
+			if currentOrder[0] == -1 {
+				copy(currentOrder, bid.Order)
+			}
+			if bid.Order[0] == currentOrder[0] && bid.Order[1] == currentOrder[1] {
+				carts[bid.ID-1] = bid.Cost
+			}
+			if !ContainsAll(carts) {
+				bid = <-com.AuctionCh
+			}
+			fmt.Println(carts)
+		}
+
 		fmt.Println("kommer vi hertil?11111")
 		currentOrder[0] = -1
 		com.PeerMap.Mu.Unlock()
@@ -180,4 +190,13 @@ func Claim(order []int, winner int) { // order: [floor, dir, ID]
 		data.WinnerId = winner
 		com.OutputCh <- data
 	}
+}
+
+func ContainsAll(carts []int) bool {
+	for _, t := range carts {
+		if t == 0 {
+			return false
+		}
+	}
+	return true
 }

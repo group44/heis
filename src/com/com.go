@@ -20,7 +20,7 @@ var (
 	OrderCh             = make(chan []int)
 	TableCh             = make(chan types.GlobalTable)
 	AuctionCh           = make(chan types.Data)
-	AddOrderCh          = make(chan types.Data)
+	AddOrderCh          = make(chan types.Data, 5)
 	RemoveOrderCh       = make(chan []int, 5)
 	UpdateGlobalTableCh = make(chan types.GlobalTable)
 
@@ -108,12 +108,15 @@ func UpdatePeerMap(p *types.PeerMap) {
 	var id int
 
 	for {
+		fmt.Println("111111111")
 		time.Sleep(100 * time.Millisecond)
 		id = <-peerCh
+		fmt.Println("2222222222")
 
-		p.Mu.Lock()
+		//p.Mu.Lock()
 		p.M[id] = time.Now()
-		p.Mu.Unlock()
+		//p.Mu.Unlock()
+		fmt.Println("3333333")
 		fmt.Println(PeerMap)
 	}
 
@@ -136,11 +139,12 @@ func ReceiveData(conn *net.UDPConn) {
 
 		//fmt.Println("in:")
 		//fmt.Println(inc)
-
+		fmt.Println("her er vi")
 		if inc.ID > 0 {
 			// update peermap
 			peerCh <- inc.ID // c1
 		}
+		fmt.Println("her vil vi")
 
 		fmt.Println("FØØØØØØØØØØØØØØØØØØØØØØØØØØØRRRR SWITCHEN")
 		fmt.Println(inc.Head)
@@ -154,16 +158,20 @@ func ReceiveData(conn *net.UDPConn) {
 
 		case "table":
 			if inc.ID != types.CART_ID {
-				fmt.Println("Table received")
-				//fmt.Println(inc.Table)
-				fmt.Println("")
-				//TableCh <- inc.Table //
-				fmt.Println("kommer vi hertil??????")
-
+				/*
+					fmt.Println("Table received")
+					//fmt.Println(inc.Table)
+					fmt.Println("")
+					//TableCh <- inc.Table //
+					fmt.Println("kommer vi hertil??????")
+				*/
 			}
 
 		case "cost":
+			fmt.Println("FØØØRRR")
+			fmt.Println(inc)
 			AuctionCh <- inc
+			fmt.Println("ETEEEEETETETET")
 			//fmt.Println(inc)
 			//fmt.Println(AuctionCh)
 			fmt.Println("Cost received:")

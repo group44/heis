@@ -92,8 +92,9 @@ func ElevSetSpeed(speed int) {
 	}
 
 	lastSpeed = speed
-	//Adjust this to get instant stop
-	time.Sleep(25 * time.Millisecond)
+	//Adjust this to get instant stop, higher value if it does't stop, lower value if
+	// it drives a little in the other direction before it stops
+	time.Sleep(10 * time.Millisecond)
 	// Write new setting to motor
 	IoWriteAnalog(MOTOR, 2048+4*int(math.Abs(float64(speed))))
 }

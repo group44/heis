@@ -135,9 +135,9 @@ func CheckExternalButtons() {
 	data := types.Data{Head: "order"}
 
 	for {
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 		for i := 0; i < types.N_FLOORS; i++ {
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(1 * time.Millisecond)
 			if driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) != 0 {
 				data.Order = []int{i, 0}
 				com.OutputCh <- data
@@ -147,20 +147,17 @@ func CheckExternalButtons() {
 				fmt.Println("")
 
 				for driver.ElevGetButtonSignal(driver.BUTTON_CALL_UP, i) == 1 {
-					time.Sleep(50 * time.Millisecond)
+					time.Sleep(1 * time.Millisecond)
 				}
 			} else if driver.ElevGetButtonSignal(driver.BUTTON_CALL_DOWN, i) != 0 {
 				data.Order = []int{i, 1}
 				com.OutputCh <- data
-				//com.OutputCh <- types.Data{Head: "addorder", Order: order, Cost: cost, Table: GlobalOrders}
-				//com.AddOrderCh <- data
-
 				fmt.Println("Order created:")
 				//fmt.Println(data)
 				fmt.Println("")
 
 				for driver.ElevGetButtonSignal(driver.BUTTON_CALL_DOWN, i) == 1 {
-					time.Sleep(50 * time.Millisecond)
+					time.Sleep(1 * time.Millisecond)
 				}
 			}
 		}
@@ -325,15 +322,14 @@ func Redistribute() {
 // In separate goroutine
 func UpdateLights() {
 	var msg string
-
 	for {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 		msg = <-UpdateLightCh
 
 		switch msg {
 		case "internal":
 			for i := range InternalOrders {
-				time.Sleep(10 * time.Millisecond)
+				time.Sleep(1 * time.Millisecond)
 				driver.ElevSetLights(i, 2, InternalOrders[i])
 			}
 			//fmt.Println("Internal Lights updated")
@@ -342,7 +338,7 @@ func UpdateLights() {
 
 			for j := 0; j < types.N_FLOORS; j++ {
 				for k := 0; k < 2; k++ {
-					time.Sleep(10 * time.Millisecond)
+					time.Sleep(1 * time.Millisecond)
 					if GlobalOrders[j][k] != 0 {
 						driver.ElevSetLights(j, k, 1)
 					} else {
