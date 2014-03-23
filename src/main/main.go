@@ -1,14 +1,10 @@
 package main
 
 import (
-	"fmt"
-	//"net"
-	//"../types"
 	"../com"
-	"../order"
-	//"../driver"
 	"../elevator"
-	//"time"
+	"../order"
+	"fmt"
 	"runtime"
 )
 

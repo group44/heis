@@ -54,7 +54,6 @@ func Run() {
 	<-done
 }
 
-// Go routine for the idle state of the elevator
 func Idle() {
 	for {
 		<-idleCh
@@ -76,8 +75,6 @@ func Idle() {
 	}
 }
 
-// Go routine for the open state of the elevator
-// open state is when the doors of the elevator are open
 func Open() {
 	for {
 		<-openCh
@@ -90,8 +87,6 @@ func Open() {
 	}
 }
 
-// Go routine for the down state of the elevator
-// Down state is when the elevator is travelling down
 func Down() {
 	for {
 		<-downCh
@@ -110,8 +105,6 @@ func Down() {
 	}
 }
 
-// Go routine for the up state of the elevator
-// up state is when the elevator is travelling up
 func Up() {
 	for {
 		<-upCh
@@ -130,7 +123,6 @@ func Up() {
 	}
 }
 
-// Go routine that sets the floor light indicators
 func FloorLights() {
 	for {
 		time.Sleep(1 * time.Millisecond)
@@ -138,8 +130,6 @@ func FloorLights() {
 	}
 }
 
-// Checks if the elevator is about to travel over the top floor
-// or below the bottom floor
 func Safety() bool {
 	if driver.ElevGetFloorSensorSignal() == 0 && !order.CheckCurrentFloor() && elevatorDirection == DOWN {
 		return true
@@ -149,7 +139,6 @@ func Safety() bool {
 	return false
 }
 
-// Go routine for the door timer.
 func DoorTimer() {
 	for {
 		<-doorTimerStartCh

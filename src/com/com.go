@@ -2,12 +2,9 @@ package com
 
 import (
 	"../types"
+	"encoding/json"
 	"fmt"
 	"net"
-	//"sync"
-	//"../order"
-	//"encoding/gob"
-	"encoding/json"
 	"os"
 	"time"
 )
@@ -20,15 +17,14 @@ var (
 	OrderCh             = make(chan []int)
 	TableCh             = make(chan types.GlobalTable)
 	AuctionCh           = make(chan types.Data)
-	AddOrderCh          = make(chan types.Data, 5)
-	RemoveOrderCh       = make(chan []int, 5)
+	AddOrderCh          = make(chan types.Data)
+	RemoveOrderCh       = make(chan []int)
 	UpdateGlobalTableCh = make(chan types.GlobalTable)
 
 	// Local channels
 	peerCh = make(chan int)
 )
 
-// Create sockets and start go routines
 func Run() {
 
 	done := make(chan bool)
@@ -56,7 +52,6 @@ func Run() {
 	<-done
 }
 
-// Error check
 func CheckError(err error) {
 	if err != nil {
 		fmt.Println("Fatal error ", err.Error())
@@ -64,12 +59,10 @@ func CheckError(err error) {
 	}
 }
 
-// Creates a map with peer IP as key and time.Time as element
 func NewPeerMap() *types.PeerMap {
 	return &types.PeerMap{M: make(map[int]time.Time)}
 }
 
-// Checks if peer address is in peer map and time difference is not > 1 sec
 func CheckPeerLife(p types.PeerMap, id int) bool {
 	_, present := p.M[id]
 	if present {
@@ -79,7 +72,6 @@ func CheckPeerLife(p types.PeerMap, id int) bool {
 	return false
 }
 
-// Updates peermap and sets discovery time from conn input
 func UpdatePeerMap(p *types.PeerMap) {
 	var id int
 	for {
@@ -91,7 +83,6 @@ func UpdatePeerMap(p *types.PeerMap) {
 
 }
 
-// Listens and receives from connection in seperate go-routine
 func ReceiveData(conn *net.UDPConn) {
 	var inc types.Data
 	//var err error
@@ -144,8 +135,6 @@ func ReceiveData(conn *net.UDPConn) {
 	}
 }
 
-// Go routine for sending data over udp
-// Sends all messeage 2 times to make sure they get through
 func CastData(conn *net.UDPConn) {
 	var data types.Data
 	var err error

@@ -30,19 +30,21 @@ func Run() {
 	done := make(chan bool)
 
 	GlobalOrders = types.NewGlobalTable()
+	GlobalOrders[1][1] = 2
 	InternalOrders = types.NewInternalTable()
 	Direction = UP
 
 	go UpdateInternalTable()
-	go UpdateLights()
 	ReadFile()
 	go Auction(GlobalOrders)
 	go AddOrder()
+	go UpdateLights()
 	go HandleCost()
 	go RemoveOrder()
 	go PrintTables()
 	go PrintOrderDirection()
 	go CheckExternalButtons()
+	go Redistribute()
 
 	<-done
 }
@@ -312,10 +314,30 @@ func PrintTables() {
 	}
 }
 
-// Checks if a peer is disconnected and sends the orders for that peer
-// out for a new auction to be executed by another peer
 func Redistribute() {
-
+	var data types.Data
+	var present bool
+	var temp int
+	for {
+		time.Sleep(1000 * time.Millisecond)
+		for floor := range GlobalOrders {
+			for i := 0; i < 2; i++ {
+				temp = GlobalOrders[floor][i]
+				if temp != 0 {
+				}
+				_, present = com.PeerMap.M[temp]
+				if GlobalOrders[floor][i] != 0 && !present {
+					data = types.Data{Head: "removeorder"}
+					data.Order = []int{floor, i}
+					com.OutputCh <- data
+					time.Sleep(20 * time.Millisecond)
+					data = types.Data{Head: "order"}
+					data.Order = []int{floor, i}
+					com.OutputCh <- data
+				}
+			}
+		}
+	}
 }
 
 func UpdateLights() {

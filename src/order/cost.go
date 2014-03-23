@@ -5,7 +5,6 @@ import (
 	"../driver"
 	"../types"
 	"fmt"
-	//"math/rand"
 	"math"
 	"time"
 )
@@ -104,7 +103,7 @@ func HandleCost() {
 	}
 }
 
-func Auction() {
+func Auction(GlobalOrders types.GlobalTable) {
 	var winner int
 	var lowestCost = 100
 	var currentOrder = make([]int, 2)
@@ -113,26 +112,28 @@ func Auction() {
 	var bidder types.Data
 
 	for {
-		for cart := range PeerMap.M {
-			auctionMap[cart] = PeerMap.M[cart]
+		time.Sleep(25 * time.Millisecond)
+		for cart := range com.PeerMap.M {
+			auctionMap[cart] = 0
 		}
+		bidder = <-com.AuctionCh
+
 		for {
 			time.Sleep(50 * time.Millisecond)
+
 			select {
-			case bidder = <-AuctionCh:
+			case bidder := <-com.AuctionCh:
+				fmt.Println(bidder)
 				if currentOrder[0] == -1 {
 					copy(currentOrder, bidder.Order)
 				}
 				auctionMap[bidder.ID] = bidder.Cost
-			default:
-				break
+				fmt.Println(auctionMap)
 			}
-
-			fmt.Println(carts)
+			break
 		}
-
+		fmt.Println("2")
 		currentOrder[0] = -1
-
 		for cart := range auctionMap {
 			if auctionMap[cart] < lowestCost {
 				winner = cart
@@ -145,7 +146,8 @@ func Auction() {
 		for cart := range auctionMap {
 			delete(auctionMap, cart)
 		}
-
+		fmt.Println(bidder.Order)
+		Claim(bidder.Order, winner)
 	}
 }
 
