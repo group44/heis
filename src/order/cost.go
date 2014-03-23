@@ -105,9 +105,6 @@ func HandleCost() {
 		order = <-com.OrderCh
 		cost = CalculateCost(order)
 		fmt.Println("Cost calculated and sent")
-		//fmt.Println(cost)
-		//fmt.Println("")
-
 		com.OutputCh <- types.Data{Head: "cost", Order: order, Cost: cost}
 	}
 

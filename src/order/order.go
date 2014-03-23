@@ -220,6 +220,13 @@ func CheckOtherFloors() int {
 				}
 			}
 		}
+		for floor := currentFloor; floor < types.N_FLOORS; floor++ {
+			if floor != currentFloor {
+				if GlobalOrders[floor][DOWN] == types.CART_ID {
+					return floor
+				}
+			}
+		}
 		ChangeOrderDirection(DOWN)
 		//fmt.Println("Order direction changed too DOWN")
 
@@ -238,6 +245,13 @@ func CheckOtherFloors() int {
 					return floor
 				} else if InternalOrders[floor] == 1 {
 					ChangeOrderDirection(UP)
+					return floor
+				}
+			}
+		}
+		for floor := currentFloor; floor >= 0; floor-- {
+			if floor != currentFloor {
+				if GlobalOrders[floor][UP] == types.CART_ID {
 					return floor
 				}
 			}
