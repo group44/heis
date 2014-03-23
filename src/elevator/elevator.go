@@ -22,8 +22,7 @@ const (
 var (
 
 	// Global channels sjekke om alle er i bruk
-	ElevatorDirectionCh = make(chan string)
-	elevatorDirection   int
+	elevatorDirection int
 
 	// Local channels
 	doorTimerStartCh = make(chan bool)
@@ -57,7 +56,6 @@ func Run() {
 	idleCh <- true
 	<-done
 	fmt.Println("The elevator program is turned off")
-
 }
 
 func Idle() {
@@ -156,7 +154,7 @@ func FloorLights() {
 	}
 }
 
-// Kjores i go routine, kan endre channel til string og legge til flere safety ting som nodstopp og obs her lett
+// Too make sure the elevator never drives over top floor or under bottom floor. Returns true if elevator reaches top floor or bottom floor without order there.
 func Safety() bool {
 	if driver.ElevGetFloorSensorSignal() == 0 && !order.CheckCurrentFloor() && elevatorDirection == DOWN {
 		return true
@@ -167,10 +165,8 @@ func Safety() bool {
 }
 
 func DoorTimer() {
-
 	for {
 		<-doorTimerStartCh
-
 		driver.ElevSetDoorOpenLamp(ON)
 		fmt.Println("Timer started")
 		time.Sleep(3000 * time.Millisecond)

@@ -134,22 +134,15 @@ func ClearOrder() {
 	UpdateLightCh <- "global"
 }
 
-// Vurder assert, tar ikke hensyn til retning. Sjekker kun om det er ordre den skal ta selv
-/*func CheckCurrentFloor() bool {
-	currentFloor := driver.ElevGetFloorSensorSignal()
-	dir := GetOrderDirection()
-
-	if currentFloor != -1 {
-		//fmt.Println(GlobalOrders[currentFloor][dir] == types.CART_ID)
-		return InternalOrders[currentFloor] == 1 || GlobalOrders[currentFloor][dir] == types.CART_ID //|| GlobalOrders[currentFloor][DOWN] == types.CART_ID
-	}
-	return false
-}*/
-
 // ny funksjon, kan ikke skjønne at denne ikke skal fungere
 func CheckCurrentFloor() bool {
 	currentFloor := driver.ElevGetFloorSensorSignal()
 	dir := GetOrderDirection()
+	if currentFloor == 0 {
+		ChangeOrderDirection(UP)
+	} else if currentFloor == (types.N_FLOORS - 1) {
+		ChangeOrderDirection(DOWN)
+	}
 
 	if currentFloor == -1 {
 		return false
@@ -202,23 +195,6 @@ func CheckExternalButtons() {
 	}
 
 }
-
-// For enkel, returnerer bare den foerste ordren den finner. Kan gjoeres om til aa returnere flere verdier
-/*func CheckAllFloors() int {
-	//Checks internal orders first
-	currentFloor := driver.ElevGetFloorSensorSignal()
-
-	for floor := range InternalOrders {
-		if floor != currentFloor {
-			if InternalOrders[floor] == 1 || GlobalOrders[floor][0] == 1 || GlobalOrders[floor][1] == 1 {
-				return floor
-			}
-		}
-	}
-
-	return -1
-}
-*/
 
 func GetCurrentFloor() int {
 	currentFloor := -1
