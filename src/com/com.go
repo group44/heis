@@ -143,7 +143,7 @@ func CastData(conn *net.UDPConn) {
 		data = <-OutputCh
 		data.ID = types.CART_ID
 		data.T = time.Now()
-		for i := 0; i < 2; i++ {
+		for i := 0; i < 1; i++ {
 			fmt.Println("Data casted:", data)
 			b := make([]byte, 1024)
 			b, err = json.Marshal(data)

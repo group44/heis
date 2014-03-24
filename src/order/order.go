@@ -30,7 +30,6 @@ func Run() {
 	done := make(chan bool)
 
 	GlobalOrders = types.NewGlobalTable()
-	GlobalOrders[1][1] = 2
 	InternalOrders = types.NewInternalTable()
 	Direction = UP
 
@@ -324,16 +323,18 @@ func Redistribute() {
 			for i := 0; i < 2; i++ {
 				temp = GlobalOrders[floor][i]
 				if temp != 0 {
-				}
-				_, present = com.PeerMap.M[temp]
-				if GlobalOrders[floor][i] != 0 && !present {
-					data = types.Data{Head: "removeorder"}
-					data.Order = []int{floor, i}
-					com.OutputCh <- data
-					time.Sleep(20 * time.Millisecond)
-					data = types.Data{Head: "order"}
-					data.Order = []int{floor, i}
-					com.OutputCh <- data
+
+					_, present = com.PeerMap.M[temp]
+					if GlobalOrders[floor][i] != 0 && !present {
+						fmt.Println("HELVETES HORE FAEN")
+						data = types.Data{Head: "removeorder"}
+						data.Order = []int{floor, i}
+						com.OutputCh <- data
+						time.Sleep(20 * time.Millisecond)
+						data = types.Data{Head: "order"}
+						data.Order = []int{floor, i}
+						com.OutputCh <- data
+					}
 				}
 			}
 		}

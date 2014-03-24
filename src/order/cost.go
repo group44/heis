@@ -89,6 +89,7 @@ func CalculateCost(order []int) int {
 	if cost < 0 {
 		return 0
 	}
+	fmt.Println("KOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOST er :", cost)
 	return cost
 }
 
@@ -117,18 +118,25 @@ func Auction(GlobalOrders types.GlobalTable) {
 			auctionMap[cart] = 0
 		}
 		bidder = <-com.AuctionCh
-
+		fmt.Println(bidder)
+		if currentOrder[0] == -1 {
+			copy(currentOrder, bidder.Order)
+		}
+		auctionMap[bidder.ID] = bidder.Cost
+		fmt.Println(auctionMap)
 		for {
 			time.Sleep(50 * time.Millisecond)
-
 			select {
 			case bidder := <-com.AuctionCh:
+				fmt.Println("KOMERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
 				fmt.Println(bidder)
 				if currentOrder[0] == -1 {
 					copy(currentOrder, bidder.Order)
 				}
 				auctionMap[bidder.ID] = bidder.Cost
 				fmt.Println(auctionMap)
+			default:
+				break
 			}
 			break
 		}
@@ -140,15 +148,21 @@ func Auction(GlobalOrders types.GlobalTable) {
 				lowestCost = auctionMap[cart]
 			}
 		}
-
+		lowestCost = 100
 		fmt.Println("Winner:", winner)
 
 		for cart := range auctionMap {
 			delete(auctionMap, cart)
 		}
 		fmt.Println(bidder.Order)
-		Claim(bidder.Order, winner)
+		if winner == types.CART_ID {
+			Claim(bidder.Order, winner)
+		}
 	}
+}
+
+func AuctionMap() {
+
 }
 
 func Claim(order []int, winner int) {
@@ -158,6 +172,7 @@ func Claim(order []int, winner int) {
 		fmt.Println("order has been claimed. order:", order)
 		data.Order = order
 		data.WinnerId = winner
+		fmt.Println("Vinnerennnnnnnnnnnnnnnnnnnnnnnnnn er:", winner)
 		com.OutputCh <- data
 	}
 }
