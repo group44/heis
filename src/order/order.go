@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"os/signal"
 )
 
 const (
@@ -23,6 +24,7 @@ var (
 	Direction      int
 	GlobalOrders   types.GlobalTable
 	InternalOrders types.InternalTable
+	osChan chan os.Signal
 )
 
 func Run() {
@@ -369,11 +371,15 @@ func UpdateLights() {
 	}
 }
 
-func Backup() {
-	for {
-		time.Sleep(250 * time.Millisecond)
-		WriteFile()
-	}
+func  OsTest() {  
+        osChan := make(chan os.Signal, 1)                                                      
+    signal.Notify(osChan, os.Interrupt)
+    <- osChan    
+    WriteFile()
+    fmt.Println("Programmet er blitt avsluttet")
+    time.Sleep(100*time.Millisecond)
+    //stop elevator her...
+    os.Exit(1)
 }
 
 func ReadFile() {
@@ -389,6 +395,7 @@ func ReadFile() {
 }
 
 func WriteFile() {
+	fmt.Println("Backup skrevet til fil")
 	msg := strconv.Itoa(InternalOrders[0]) + strconv.Itoa(InternalOrders[1]) + strconv.Itoa(InternalOrders[2]) + strconv.Itoa(InternalOrders[3])
 	buf := []byte(msg)
 	_ = ioutil.WriteFile("backup.txt", buf, 0644)
