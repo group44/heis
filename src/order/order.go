@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"os/signal"
+	
 )
 
 const (
@@ -371,17 +371,6 @@ func UpdateLights() {
 	}
 }
 
-func  OsTest() {  
-        osChan := make(chan os.Signal, 1)                                                      
-    signal.Notify(osChan, os.Interrupt)
-    <- osChan    
-    WriteFile()
-    fmt.Println("Programmet er blitt avsluttet")
-    time.Sleep(100*time.Millisecond)
-    //stop elevator her...
-    os.Exit(1)
-}
-
 func ReadFile() {
 	b, err := ioutil.ReadFile("backup.txt")
 	if err != nil {
@@ -391,6 +380,7 @@ func ReadFile() {
 	for i := 0; i < types.N_FLOORS; i++ {
 		InternalOrders[i], _ = strconv.Atoi(internal[i])
 	}
+	time.Sleep(25*time.Millisecond)
 	UpdateLightCh <- "internal"
 }
 

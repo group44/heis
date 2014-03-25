@@ -16,7 +16,7 @@ func main() {
 	go order.Run()
 	go com.Run()
 	go elevator.Run()
-	go order.OsTest()
+	go elevator.OsTest()
 
 	<-done
 	fmt.Println("End")

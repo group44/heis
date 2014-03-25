@@ -6,6 +6,8 @@ import (
 	"../types"
 	"fmt"
 	"time"
+	"os/signal"
+	"os"
 )
 
 const (
@@ -31,6 +33,7 @@ var (
 	openCh           = make(chan bool)
 	downCh           = make(chan bool)
 	upCh             = make(chan bool)
+	osChan chan os.Signal
 )
 
 // Starts the go routines and initializing of the elevator
@@ -50,6 +53,7 @@ func Run() {
 	go Open()
 	go Down()
 	go Up()
+	go DoorSafety()
 	idleCh <- true
 	<-done
 }
@@ -70,6 +74,12 @@ func Idle() {
 			} else if order.FindDirection() == 0 {
 				upCh <- true
 				break
+			} else if driver.ElevGetFloorSensorSignal() == -1 {
+				time.Sleep(500*time.Millisecond)
+				for driver.ElevGetFloorSensorSignal() == -1 {
+					driver.ElevSetSpeed(-100)
+				}
+				driver.ElevSetSpeed(0)
 			}
 		}
 	}
@@ -146,5 +156,25 @@ func DoorTimer() {
 		time.Sleep(3000 * time.Millisecond)
 		driver.ElevSetDoorOpenLamp(OFF)
 		doorTimerDoneCh <- true
+	}
+}
+
+func  OsTest() {  
+        osChan := make(chan os.Signal, 1)                                                      
+    signal.Notify(osChan, os.Interrupt)
+    <- osChan    
+    order.WriteFile()
+    fmt.Println("Programmet er blitt avsluttet")
+    time.Sleep(100*time.Millisecond)
+    //stop elevator her...
+    os.Exit(1)
+}
+
+func DoorSafety() {
+	for {
+		if driver.ElevGetFloorSensorSignal() == -1 && driver.IoReadBit(driver.DOOR_OPEN) == 1{
+			driver.ElevSetDoorOpenLamp(OFF)
+			doorTimerDoneCh <- true
+		}
 	}
 }
