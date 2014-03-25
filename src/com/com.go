@@ -29,9 +29,9 @@ func Run() {
 
 	done := make(chan bool)
 
-	broadcastAddr := "129.241.187.255:12002" // For sanntidssalen
+	broadcastAddr := "129.241.187.255:12009" // For sanntidssalen
 	//broadcastAddr := "localhost:12000" //localhost
-	listenAddr := ":12002"
+	listenAddr := ":12009"
 
 	lAddr, err := net.ResolveUDPAddr("udp", listenAddr)
 	CheckError(err)

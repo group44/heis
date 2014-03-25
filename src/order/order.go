@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	
 )
 
 const (
@@ -24,7 +23,7 @@ var (
 	Direction      int
 	GlobalOrders   types.GlobalTable
 	InternalOrders types.InternalTable
-	osChan chan os.Signal
+	osChan         chan os.Signal
 )
 
 func Run() {
@@ -380,7 +379,7 @@ func ReadFile() {
 	for i := 0; i < types.N_FLOORS; i++ {
 		InternalOrders[i], _ = strconv.Atoi(internal[i])
 	}
-	time.Sleep(25*time.Millisecond)
+	time.Sleep(25 * time.Millisecond)
 	UpdateLightCh <- "internal"
 }
 
@@ -419,7 +418,7 @@ func RemoveOrder() {
 	for {
 		order = <-com.RemoveOrderCh
 		GlobalOrders[order[0]][order[1]] = 0
-		com.OutputCh <- types.Data{Head: "table", Order: order, Table: GlobalOrders}
+		//com.OutputCh <- types.Data{Head: "table", Order: order, Table: GlobalOrders}
 		fmt.Println("new global table removed:")
 		fmt.Println(GlobalOrders)
 		UpdateLightCh <- "global"

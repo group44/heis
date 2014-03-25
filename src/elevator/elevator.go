@@ -5,9 +5,9 @@ import (
 	"../order"
 	"../types"
 	"fmt"
-	"time"
-	"os/signal"
 	"os"
+	"os/signal"
+	"time"
 )
 
 const (
@@ -33,7 +33,7 @@ var (
 	openCh           = make(chan bool)
 	downCh           = make(chan bool)
 	upCh             = make(chan bool)
-	osChan chan os.Signal
+	osChan           chan os.Signal
 )
 
 // Starts the go routines and initializing of the elevator
@@ -75,7 +75,7 @@ func Idle() {
 				upCh <- true
 				break
 			} else if driver.ElevGetFloorSensorSignal() == -1 {
-				time.Sleep(500*time.Millisecond)
+				time.Sleep(500 * time.Millisecond)
 				for driver.ElevGetFloorSensorSignal() == -1 {
 					driver.ElevSetSpeed(-100)
 				}
@@ -159,21 +159,20 @@ func DoorTimer() {
 	}
 }
 
-func  OsTest() {  
-        osChan := make(chan os.Signal, 1)                                                      
-    signal.Notify(osChan, os.Interrupt)
-    <- osChan    
-    order.WriteFile()
-    fmt.Println("Programmet er blitt avsluttet")
-    idleCh <- true
-    time.Sleep(100*time.Millisecond)
-    //stop elevator her...
-    os.Exit(1)
+func OsTest() {
+	osChan := make(chan os.Signal, 1)
+	signal.Notify(osChan, os.Interrupt)
+	<-osChan
+	order.WriteFile()
+	fmt.Println("Programmet er blitt avsluttet")
+	driver.ElevSetSpeed(0)
+	//stop elevator her...
+	os.Exit(1)
 }
 
 func DoorSafety() {
 	for {
-		if driver.ElevGetFloorSensorSignal() == -1 && driver.IoReadBit(driver.DOOR_OPEN) == 1{
+		if driver.ElevGetFloorSensorSignal() == -1 && driver.IoReadBit(driver.DOOR_OPEN) == 1 {
 			driver.ElevSetDoorOpenLamp(OFF)
 			doorTimerDoneCh <- true
 		}
