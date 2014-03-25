@@ -116,10 +116,9 @@ func Auction(GlobalOrders types.GlobalTable) {
 	for {
 		time.Sleep(50 * time.Millisecond)
 		for cart := range com.PeerMap.M {
-			auctionMap[cart] = 0
+			auctionMap[cart] = -1
 		}
-
-		fmt.Println("auctionMap 1: ", auctionMap)
+		lowestCost = 100
 		bidder = <-com.AuctionCh
 		auctionMap[bidder.ID] = bidder.Cost
 		length = len(com.PeerMap.M)
@@ -173,24 +172,34 @@ func Auction(GlobalOrders types.GlobalTable) {
 		fmt.Println("auctionMap 3: ", auctionMap)
 
 		currentOrder[0] = -1
-
-		for cart := range auctionMap {
+		fmt.Println("lengden av auction map er:", len(auctionMap))
+		//for cart := range auctionMap {
+		for cart := 1; cart <= len(auctionMap); cart++ {
+			fmt.Println("hahahahahahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+			fmt.Println("auctionmap[2]", auctionMap[2])
+			fmt.Println("auctionmap[1]", auctionMap[1])
+			time.Sleep(5 * time.Millisecond)
+			fmt.Println("auctionmap[cart]", auctionMap[cart])
+			fmt.Println("lowest cost er", lowestCost)
 			if auctionMap[cart] < lowestCost {
+				fmt.Println("heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+				fmt.Println("cart:", cart)
 				winner = cart
+				fmt.Println("winner", winner)
 				lowestCost = auctionMap[cart]
+				fmt.Println("Winner ", winner)
 			}
 		}
-		fmt.Println("auctionMap 4: ", auctionMap)
 
 		for cart := range auctionMap {
 			delete(auctionMap, cart)
 		}
-		fmt.Println("auctionMap 5: ", auctionMap)
 		//fmt.Println(bidder.Order)
 		if winner == types.CART_ID {
 			Claim(bidder.Order, winner)
 		}
 		fmt.Println("Winner for order", bidder.Order, ": ", winner)
+		winner = 0
 	}
 }
 
