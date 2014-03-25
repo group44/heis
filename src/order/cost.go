@@ -111,6 +111,97 @@ func Auction(GlobalOrders types.GlobalTable) {
 	currentOrder[0], currentOrder[1] = -1, -1
 	var auctionMap = make(map[int]int)
 	var bidder types.Data
+	var length int
+
+	for {
+		time.Sleep(50 * time.Millisecond)
+		for cart := range com.PeerMap.M {
+			auctionMap[cart] = 0
+		}
+
+		fmt.Println("auctionMap 1: ", auctionMap)
+		bidder = <-com.AuctionCh
+		auctionMap[bidder.ID] = bidder.Cost
+		length = len(com.PeerMap.M)
+		if currentOrder[0] == -1 {
+			copy(currentOrder, bidder.Order)
+		}
+		fmt.Println("Length er:", length)
+		switch length {
+		case 1:
+			break
+
+		case 2:
+			bidder = <-com.AuctionCh
+			if bidder.Order[0] == currentOrder[0] && bidder.Order[1] == currentOrder[1] {
+				auctionMap[bidder.ID] = bidder.Cost
+			}
+			break
+
+		case 3:
+			bidder = <-com.AuctionCh
+			if bidder.Order[0] == currentOrder[0] && bidder.Order[1] == currentOrder[1] {
+				auctionMap[bidder.ID] = bidder.Cost
+			}
+			bidder = <-com.AuctionCh
+			if bidder.Order[0] == currentOrder[0] && bidder.Order[1] == currentOrder[1] {
+				auctionMap[bidder.ID] = bidder.Cost
+			}
+			break
+		}
+		/*
+		   bidder = <-com.AuctionCh
+		   //fmt.Println(bidder)
+		   if currentOrder[0] == -1 {
+		   copy(currentOrder, bidder.Order)
+		   }
+		   auctionMap[bidder.ID] = bidder.Cost
+		   fmt.Println("auctionMap 2: ", auctionMap)
+		   for {
+		   time.Sleep(50 * time.Millisecond)
+		   select {
+		   case bidder := <-com.AuctionCh:
+		   //fmt.Println(bidder)
+		   auctionMap[bidder.ID] = bidder.Cost
+		   //fmt.Println(auctionMap)
+		   default:
+		   break
+		   }
+		   break
+		   }
+		*/
+		fmt.Println("auctionMap 3: ", auctionMap)
+
+		currentOrder[0] = -1
+
+		for cart := range auctionMap {
+			if auctionMap[cart] < lowestCost {
+				winner = cart
+				lowestCost = auctionMap[cart]
+			}
+		}
+		fmt.Println("auctionMap 4: ", auctionMap)
+
+		for cart := range auctionMap {
+			delete(auctionMap, cart)
+		}
+		fmt.Println("auctionMap 5: ", auctionMap)
+		//fmt.Println(bidder.Order)
+		if winner == types.CART_ID {
+			Claim(bidder.Order, winner)
+		}
+		fmt.Println("Winner for order", bidder.Order, ": ", winner)
+	}
+}
+
+/*
+func Auction(GlobalOrders types.GlobalTable) {
+	var winner int
+	var lowestCost = 100
+	var currentOrder = make([]int, 2)
+	currentOrder[0], currentOrder[1] = -1, -1
+	var auctionMap = make(map[int]int)
+	var bidder types.Data
 
 	for {
 		time.Sleep(25 * time.Millisecond)
@@ -164,7 +255,7 @@ func Auction(GlobalOrders types.GlobalTable) {
 func AuctionMap() {
 
 }
-
+*/
 func Claim(order []int, winner int) {
 	floor, dir := order[0], order[1]
 	data := types.Data{Head: "addorder"}

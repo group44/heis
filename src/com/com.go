@@ -48,7 +48,7 @@ func Run() {
 	go CastData(bConn)
 	go ReceiveData(lConn)
 	go UpdatePeerMap(PeerMap)
-
+	go Ping()
 	<-done
 }
 
@@ -152,5 +152,12 @@ func CastData(conn *net.UDPConn) {
 			CheckError(err)
 			time.Sleep(1 * time.Millisecond)
 		}
+	}
+}
+
+func Ping() {
+	for {
+		OutputCh <- types.Data{ID: types.CART_ID}
+		time.Sleep(1 * time.Second)
 	}
 }
