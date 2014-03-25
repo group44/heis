@@ -165,6 +165,7 @@ func  OsTest() {
     <- osChan    
     order.WriteFile()
     fmt.Println("Programmet er blitt avsluttet")
+    idleCh <- true
     time.Sleep(100*time.Millisecond)
     //stop elevator her...
     os.Exit(1)
