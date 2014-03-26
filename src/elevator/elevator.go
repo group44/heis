@@ -65,7 +65,12 @@ func Idle() {
 		driver.ElevSetDoorOpenLamp(OFF)
 		driver.ElevSetSpeed(0)
 		for {
-			if order.CheckCurrentFloor() {
+			time.Sleep(10*time.Millisecond)
+			if driver.IoReadBit(driver.OBSTRUCTION) == 1{
+				for driver.IoReadBit(driver.OBSTRUCTION) == 1 {
+					time.Sleep(100*time.Millisecond)
+				}
+			} else if order.CheckCurrentFloor() {
 				openCh <- true
 				break
 			} else if order.FindDirection() == 1 {
@@ -91,8 +96,14 @@ func Open() {
 		fmt.Println("Open state entered")
 		driver.ElevSetSpeed(0)
 		order.ClearOrder()
+		driver.ElevSetDoorOpenLamp(ON)
 		doorTimerStartCh <- true
 		<-doorTimerDoneCh
+		for driver.IoReadBit(driver.OBSTRUCTION) == 1 {
+			//doorTimerStartCh <- true
+			time.Sleep(100*time.Millisecond)
+		}
+		driver.ElevSetDoorOpenLamp(OFF)
 		idleCh <- true
 	}
 }
@@ -104,7 +115,13 @@ func Down() {
 		driver.ElevSetSpeed(-SPEED)
 		elevatorDirection = DOWN
 		for {
-			if order.CheckCurrentFloor() {
+			if driver.IoReadBit(driver.OBSTRUCTION) == 1{
+				for driver.IoReadBit(driver.OBSTRUCTION) == 1 {
+					driver.ElevSetSpeed(0)
+					time.Sleep(100*time.Millisecond)
+				}
+				driver.ElevSetSpeed(-SPEED)
+			} else if order.CheckCurrentFloor() {
 				openCh <- true
 				break
 			} else if Safety() {
@@ -122,7 +139,13 @@ func Up() {
 		elevatorDirection = UP
 		driver.ElevSetSpeed(SPEED)
 		for {
-			if order.CheckCurrentFloor() {
+			if driver.IoReadBit(driver.OBSTRUCTION) == 1{
+				for driver.IoReadBit(driver.OBSTRUCTION) == 1 {
+					driver.ElevSetSpeed(0)
+					time.Sleep(100*time.Millisecond)
+				}
+				driver.ElevSetSpeed(SPEED)
+			} else if order.CheckCurrentFloor() {
 				openCh <- true
 				break
 			} else if Safety() {
@@ -152,9 +175,12 @@ func Safety() bool {
 func DoorTimer() {
 	for {
 		<-doorTimerStartCh
-		driver.ElevSetDoorOpenLamp(ON)
+		//driver.ElevSetDoorOpenLamp(ON)
 		time.Sleep(3000 * time.Millisecond)
-		driver.ElevSetDoorOpenLamp(OFF)
+		for driver.IoReadBit(driver.OBSTRUCTION) == 1 {
+			//doorTimerStartCh <- true
+			time.Sleep(2000*time.Millisecond)
+		}
 		doorTimerDoneCh <- true
 	}
 }

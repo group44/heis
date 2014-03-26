@@ -2,30 +2,34 @@ package order
 
 import (
 	"../com"
+	"../driver"
 	"../types"
 	"fmt"
-	"math/rand"
-	//"math"
+	"math"
 	"time"
 )
 
-func TestDistribute() {
-
-}
-
-/*
-// Calculates own cost for an order får ikke inn state, så den må fjernes hvis vi ikke finner ut av det.. 
-func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
+func CalculateCost(order []int) int {
 	cost := 0
+	var state int
+	var motorDir int
 	elevatorDir := GetOrderDirection()
 	elevatorCurrentFloor := GetCurrentFloor()
 	orderFloor := order[0]
 	orderDir := order[1]
-	wdp := 10 //wrong direction punishment
-	rdr := 3  //right direction reward
-	wfm := 2  //wrong floor multiplier.
-
+	wdp := 3 //wrong direction punishment
+	rdr := 2 //right direction reward
+	wfm := 4 //wrong floor multiplier.
 	floorDiff := wfm * (int(math.Abs(float64(elevatorCurrentFloor - orderFloor))))
+
+	if driver.ElevGetFloorSensorSignal() == -1 {
+		motorDir = driver.IoReadBit(driver.MOTORDIR)
+		if motorDir == 1 {
+			state = UP
+		} else if motorDir == 0 {
+			state = DOWN
+		}
+	}
 
 	switch state {
 	case UP:
@@ -50,16 +54,8 @@ func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 	case DOWN:
 		switch elevatorDir {
 		case UP:
-				if orderDir == DOWN{
-				cost = cost + 3
-			}
-			cost = floorDiff + cost
-			break
-		case DOWN:
-			if orderDir == UP {
-				cost = cost +5
-			} else if orderDir == DOWN {
-				cost = cost - 1
+			if orderDir == DOWN {
+				cost = cost + wdp
 			}
 			cost = floorDiff + cost
 			break
@@ -69,138 +65,223 @@ func CalculateCost(lt []int, gt [][]int, state int, order []int) int {
 			} else if orderDir == DOWN {
 				cost = cost - rdr
 			}
-			break
-	default:
-		switch elevatorDir {
-		case UP:
-			if orderDir == DOWN{
-				cost = cost + 5
-			}
 			cost = floorDiff + cost
 			break
-		case DOWN:
-			if orderDir == UP {
-				cost = cost +5
+
+		default:
+			switch elevatorDir {
+			case UP:
+				if orderDir == DOWN {
+					cost = cost + wdp
+				}
+				cost = floorDiff + cost
+				break
+			case DOWN:
+				if orderDir == UP {
+					cost = cost + wdp
+				}
+				cost = floorDiff + cost
+				break
 			}
-			cost = floorDiff + cost
 			break
 		}
-	break
 	}
+	if cost < 0 {
+		return 0
 	}
+	fmt.Println("KOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOST er :", cost)
 	return cost
 }
-*/
 
-
-// Test function, gives random cost, goroutine
-
-
-func CalculateCost() {
+func HandleCost() {
 	var cost int
 	order := make([]int, 2)
-
 	for {
 		order = <-com.OrderCh
-		// Temp
-		cost = rand.Intn(10) + 1
-		// Temp
+		cost = CalculateCost(order)
+		fmt.Println("Cost calculated and sent. cost:", cost)
 		com.OutputCh <- types.Data{Head: "cost", Order: order, Cost: cost}
-
-		fmt.Println("Cost calculated:")
-		fmt.Println(cost)
-		fmt.Println("")
 	}
+}
 
+func Auction(GlobalOrders types.GlobalTable) {
+	var winner int
+	var lowestCost = 100
+	var currentOrder = make([]int, 2)
+	currentOrder[0], currentOrder[1] = -1, -1
+	var auctionMap = make(map[int]int)
+	var bidder types.Data
+	var length int
+
+	for {
+		time.Sleep(50 * time.Millisecond)
+		for cart := range com.PeerMap.M {
+			auctionMap[cart] = -1
+		}
+		lowestCost = 100
+		bidder = <-com.AuctionCh
+		auctionMap[bidder.ID] = bidder.Cost
+		length = len(com.PeerMap.M)
+		if currentOrder[0] == -1 {
+			copy(currentOrder, bidder.Order)
+		}
+		fmt.Println("Length er:", length)
+		switch length {
+		case 1:
+			break
+
+		case 2:
+			bidder = <-com.AuctionCh
+			if bidder.Order[0] == currentOrder[0] && bidder.Order[1] == currentOrder[1] {
+				auctionMap[bidder.ID] = bidder.Cost
+			}
+			break
+
+		case 3:
+			bidder = <-com.AuctionCh
+			if bidder.Order[0] == currentOrder[0] && bidder.Order[1] == currentOrder[1] {
+				auctionMap[bidder.ID] = bidder.Cost
+			}
+			bidder = <-com.AuctionCh
+			if bidder.Order[0] == currentOrder[0] && bidder.Order[1] == currentOrder[1] {
+				auctionMap[bidder.ID] = bidder.Cost
+			}
+			break
+		}
+		/*
+		   bidder = <-com.AuctionCh
+		   //fmt.Println(bidder)
+		   if currentOrder[0] == -1 {
+		   copy(currentOrder, bidder.Order)
+		   }
+		   auctionMap[bidder.ID] = bidder.Cost
+		   fmt.Println("auctionMap 2: ", auctionMap)
+		   for {
+		   time.Sleep(50 * time.Millisecond)
+		   select {
+		   case bidder := <-com.AuctionCh:
+		   //fmt.Println(bidder)
+		   auctionMap[bidder.ID] = bidder.Cost
+		   //fmt.Println(auctionMap)
+		   default:
+		   break
+		   }
+		   break
+		   }
+		*/
+		fmt.Println("auctionMap 3: ", auctionMap)
+
+		currentOrder[0] = -1
+		fmt.Println("lengden av auction map er:", len(auctionMap))
+		//for cart := range auctionMap {
+		for cart := 1; cart <= len(auctionMap); cart++ {
+			fmt.Println("hahahahahahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+			fmt.Println("auctionmap[2]", auctionMap[2])
+			fmt.Println("auctionmap[1]", auctionMap[1])
+			time.Sleep(5 * time.Millisecond)
+			fmt.Println("auctionmap[cart]", auctionMap[cart])
+			fmt.Println("lowest cost er", lowestCost)
+			if auctionMap[cart] < lowestCost {
+				fmt.Println("heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+				fmt.Println("cart:", cart)
+				winner = cart
+				fmt.Println("winner", winner)
+				lowestCost = auctionMap[cart]
+				fmt.Println("Winner ", winner)
+			}
+		}
+
+		for cart := range auctionMap {
+			delete(auctionMap, cart)
+		}
+		//fmt.Println(bidder.Order)
+		if winner == types.CART_ID {
+			Claim(bidder.Order, winner)
+		}
+		fmt.Println("Winner for order", bidder.Order, ": ", winner)
+		winner = 0
+	}
 }
 
 /*
-func CalculateCost() {
-	var order = make([]int, 2)
-	order = <- com.OrderCh
-	com.OutputCh <- types.Data{Head:"cost", Order: order, Cost: 1}
-}
-*/
-
-// Initiates an "auction" to determine which cart that should dispatch an order.
-// Bids in range 0-10, consider changing this - goroutine
 func Auction(GlobalOrders types.GlobalTable) {
 	var winner int
-	var maxCost = 10
-	var bid types.Data
+	var lowestCost = 100
 	var currentOrder = make([]int, 2)
 	currentOrder[0], currentOrder[1] = -1, -1
-	carts := make([]int, types.NUMBER_OF_CARTS)
+	var auctionMap = make(map[int]int)
+	var bidder types.Data
 
 	for {
-		
-		//fmt.Println(currentOrder)
-		time.Sleep(10 * time.Millisecond)
-		bid = <-com.AuctionCh
-
-		if currentOrder[0] == -1  {
-			currentOrder = bid.Order
+		time.Sleep(25 * time.Millisecond)
+		for cart := range com.PeerMap.M {
+			auctionMap[cart] = 0
 		}
-		
-		//fmt.Println(bid.Order)
-		
-		com.PeerMap.Mu.Lock()
-		fmt.Println("len carts")
-		for len(carts) < len(com.PeerMap.M)+1 {
+		bidder = <-com.AuctionCh
+		fmt.Println(bidder)
+		if currentOrder[0] == -1 {
+			copy(currentOrder, bidder.Order)
+		}
+		auctionMap[bidder.ID] = bidder.Cost
+		fmt.Println(auctionMap)
+		for {
 			time.Sleep(50 * time.Millisecond)
-			if bid.Order[0] == currentOrder[0] && bid.Order[1] == currentOrder[1] {
-				carts[bid.ID-1] = bid.Cost
+			select {
+			case bidder := <-com.AuctionCh:
+				fmt.Println("KOMERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+				fmt.Println(bidder)
+				if currentOrder[0] == -1 {
+					copy(currentOrder, bidder.Order)
+				}
+				auctionMap[bidder.ID] = bidder.Cost
+				fmt.Println(auctionMap)
+			default:
+				break
 			}
-			bid = <-com.AuctionCh
-			
+			break
 		}
-		
+		fmt.Println("2")
 		currentOrder[0] = -1
-		com.PeerMap.Mu.Unlock()
-		
-		//fmt.Println(len(carts))
-		// This may cause two or more elevators to claim the same order (if they have equal cost
-		for i := 0; i < len(carts); i++ {
-			fmt.Println("evig")
-			if carts[i] < maxCost {
-				maxCost = carts[i]
-				winner = i + 1
+		for cart := range auctionMap {
+			if auctionMap[cart] < lowestCost {
+				winner = cart
+				lowestCost = auctionMap[cart]
 			}
 		}
-		fmt.Println("WINNER:")
-		fmt.Println(winner)
+		lowestCost = 100
+		fmt.Println("Winner:", winner)
 
-		if winner == types.CART_ID {
-			Claim(bid.Order, GlobalOrders)
-
+		for cart := range auctionMap {
+			delete(auctionMap, cart)
 		}
-
+		fmt.Println(bidder.Order)
+		if winner == types.CART_ID {
+			Claim(bidder.Order, winner)
+		}
 	}
 }
 
-// Claims and order and marks it by setting it's own CART_ID in the ID field of the
-// global table. Should check if another ID is already set, and then not claim it, unless
-// the cart who has claimed it is dead.
-func Claim(order []int, table types.GlobalTable) { // order: [floor, dir, ID]
+func AuctionMap() {
+
+}
+*/
+func Claim(order []int, winner int) {
 	floor, dir := order[0], order[1]
-	if table[floor][dir] == 0 {
-		table[floor][dir] = types.CART_ID
-		outData := types.Data{Head: "table", Table: table}
-		fmt.Println(" ")
-		fmt.Println(table)
-		fmt.Println(" ")
-		com.TableCh <- table
-		com.OutputCh <- outData
-
-		/*
-		fmt.Println("Table casted:")
-		fmt.Println(outData)
-		fmt.Println("")
-		*/
+	data := types.Data{Head: "addorder"}
+	if GlobalOrders[floor][dir] == 0 {
+		fmt.Println("order has been claimed. order:", order)
+		data.Order = order
+		data.WinnerId = winner
+		fmt.Println("Vinnerennnnnnnnnnnnnnnnnnnnnnnnnn er:", winner)
+		com.OutputCh <- data
 	}
 }
 
-// Removes a successfully dispatched order from the global table
-func ClearGlobal(data types.Data) {
-
+func ContainsAll(carts []int) bool {
+	for _, t := range carts {
+		if t == 0 {
+			return false
+		}
+	}
+	return true
 }

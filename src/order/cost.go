@@ -17,9 +17,9 @@ func CalculateCost(order []int) int {
 	elevatorCurrentFloor := GetCurrentFloor()
 	orderFloor := order[0]
 	orderDir := order[1]
-	wdp := 3 //wrong direction punishment
+	wdp := 2 //wrong direction punishment
 	rdr := 2 //right direction reward
-	wfm := 3 //wrong floor multiplier.
+	wfm := 4 //wrong floor multiplier.
 	floorDiff := wfm * (int(math.Abs(float64(elevatorCurrentFloor - orderFloor))))
 
 	if driver.ElevGetFloorSensorSignal() == -1 {
